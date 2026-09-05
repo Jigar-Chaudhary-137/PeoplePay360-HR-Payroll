@@ -68,17 +68,17 @@ export function ErrorState({
 }) {
   return (
     <div className="glass-card p-8 text-center flex flex-col items-center justify-center space-y-4">
-      <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20">
+      <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center border border-rose-500/20">
         <AlertCircle size={24} />
       </div>
 
       <div>
-        <h4 className="text-lg font-bold text-slate-100">
+        <h4 className="text-lg font-bold text-[#171717]">
           {title}
         </h4>
 
         {message && (
-          <p className="text-sm text-slate-400 max-w-md mt-1">
+          <p className="text-sm text-[#6B7280] max-w-md mt-1">
             {message}
           </p>
         )}

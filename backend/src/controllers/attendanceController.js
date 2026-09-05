@@ -2,19 +2,83 @@ const { query } = require('../config/db');
 const { logAudit } = require('../utils/auditLogger');
 const { verifyCheckInLocation } = require('../services/locationService');
 
-function computeWorkedHours(checkIn, checkOut, breakHours = 1.0) {
-  if (!checkIn || !checkOut) return 0;
-  const [inH, inM] = checkIn.split(':').map(Number);
-  const [outH, outM] = checkOut.split(':').map(Number);
-  const inMins = inH * 60 + inM;
-  const outMins = outH * 60 + outM;
+function getLocalDateString(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  if (outMins <= inMins) {
-    return 0;
+function getLocalTimeString(d = new Date()) {
+  const hours = String(d.getHours()).padStart(2, '0');
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  const secs = String(d.getSeconds()).padStart(2, '0');
+  return `${hours}:${mins}:${secs}`;
+}
+
+function parseTime(val) {
+  if (!val) return null;
+  const str = String(val).trim();
+  const timePart = str.includes('T') ? str.split('T')[1].slice(0, 8) : (str.includes(' ') ? str.split(' ')[1].slice(0, 8) : str);
+  const m = timePart.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const s = m[3] ? parseInt(m[3], 10) : 0;
+  return {
+    h,
+    m: min,
+    s,
+    str: `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  };
+}
+
+function getCleanTime(val) {
+  const t = parseTime(val);
+  return t ? t.str : getLocalTimeString();
+}
+
+function computeAttendanceDuration(checkIn, checkOut, inDateStr, outDateStr, breakHours = 1.0) {
+  const tIn = parseTime(checkIn);
+  const tOut = parseTime(checkOut);
+  if (!tIn || !tOut) {
+    return { valid: false, message: 'Invalid check-in or check-out time format.' };
   }
 
-  const workedMins = Math.max(0, (outMins - inMins) - (Number(breakHours) * 60));
-  return Math.round((workedMins / 60) * 100) / 100;
+  let inMs, outMs;
+  if (inDateStr && outDateStr) {
+    const cleanInDate = typeof inDateStr === 'string' ? inDateStr.split('T')[0] : getLocalDateString(inDateStr);
+    const cleanOutDate = typeof outDateStr === 'string' ? outDateStr.split('T')[0] : getLocalDateString(outDateStr);
+    inMs = new Date(`${cleanInDate}T${tIn.str}`).getTime();
+    outMs = new Date(`${cleanOutDate}T${tOut.str}`).getTime();
+  } else {
+    inMs = (tIn.h * 3600 + tIn.m * 60 + tIn.s) * 1000;
+    outMs = (tOut.h * 3600 + tOut.m * 60 + tOut.s) * 1000;
+    if (outMs < inMs) {
+      outMs += 24 * 3600 * 1000;
+    }
+  }
+
+  const elapsedMs = outMs - inMs;
+  if (elapsedMs <= 0) {
+    return { valid: false, message: 'Check-out time must be later than check-in time.' };
+  }
+
+  const elapsedHours = elapsedMs / (1000 * 60 * 60);
+  const bHours = Number(breakHours) || 0;
+  const worked = elapsedHours > bHours ? (elapsedHours - bHours) : elapsedHours;
+  const workedHours = Math.round(worked * 100) / 100;
+
+  return {
+    valid: true,
+    elapsedHours: Math.round(elapsedHours * 100) / 100,
+    workedHours
+  };
+}
+
+function computeWorkedHours(checkIn, checkOut, breakHours = 1.0, inDate = null, outDate = null) {
+  const duration = computeAttendanceDuration(checkIn, checkOut, inDate, outDate, breakHours);
+  return duration.valid ? duration.workedHours : 0;
 }
 
 async function getAttendance(req, res, next) {
@@ -89,8 +153,8 @@ async function checkIn(req, res, next) {
       });
     }
 
-    const today = req.body.date || new Date().toISOString().split('T')[0];
-    const nowTime = new Date().toTimeString().split(' ')[0]; // 'HH:MM:SS'
+    const today = req.body.date || getLocalDateString();
+    const nowTime = req.body.check_in ? getCleanTime(req.body.check_in) : getLocalTimeString();
 
     // Check if record exists for today
     const existing = await query(
@@ -166,13 +230,25 @@ async function checkOut(req, res, next) {
       return res.status(400).json({ success: false, message: 'Employee ID is required.' });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const nowTime = new Date().toTimeString().split(' ')[0]; // 'HH:MM:SS'
+    const today = req.body.date || getLocalDateString();
+    const nowTime = req.body.check_out ? getCleanTime(req.body.check_out) : getLocalTimeString();
 
-    const existing = await query(
+    // 1. Look for today's record first
+    let existing = await query(
       'SELECT * FROM attendance WHERE employee_id = ? AND date = ?',
       [employeeId, today]
     );
+
+    // 2. If no checked-in record for today, look for the most recent unclosed check-in session
+    if (!existing || existing.length === 0 || !existing[0].check_in) {
+      const openRecords = await query(
+        'SELECT * FROM attendance WHERE employee_id = ? AND check_in IS NOT NULL AND check_out IS NULL ORDER BY date DESC, id DESC LIMIT 1',
+        [employeeId]
+      );
+      if (openRecords && openRecords.length > 0) {
+        existing = openRecords;
+      }
+    }
 
     if (!existing || existing.length === 0 || !existing[0].check_in) {
       return res.status(400).json({
@@ -182,15 +258,26 @@ async function checkOut(req, res, next) {
     }
 
     const record = existing[0];
-    const workedHours = computeWorkedHours(record.check_in, nowTime, record.break_hours);
-
-    if (workedHours <= 0) {
+    if (record.check_out) {
       return res.status(400).json({
         success: false,
-        message: 'Check-out time must be later than check-in time.'
+        message: `Already checked out at ${record.check_out}.`
       });
     }
 
+    const inDateStr = typeof record.date === 'string' ? record.date.split('T')[0] : getLocalDateString(record.date);
+    const outDateStr = today;
+
+    const duration = computeAttendanceDuration(record.check_in, nowTime, inDateStr, outDateStr, record.break_hours);
+
+    if (!duration.valid) {
+      return res.status(400).json({
+        success: false,
+        message: duration.message || 'Check-out time must be later than check-in time.'
+      });
+    }
+
+    const workedHours = duration.workedHours;
     const status = workedHours < 4 ? 'Half Day' : 'Present';
 
     await query(
@@ -262,11 +349,22 @@ async function getTodayStatus(req, res, next) {
       return res.json({ success: true, data: null });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const [record] = await query(
+    const today = getLocalDateString();
+    let [record] = await query(
       'SELECT * FROM attendance WHERE employee_id = ? AND date = ?',
       [employeeId, today]
     );
+
+    // If no record for today, check if there is an unclosed session from recent date
+    if (!record) {
+      const [pending] = await query(
+        'SELECT * FROM attendance WHERE employee_id = ? AND check_in IS NOT NULL AND check_out IS NULL ORDER BY date DESC, id DESC LIMIT 1',
+        [employeeId]
+      );
+      if (pending) {
+        record = pending;
+      }
+    }
 
     return res.json({
       success: true,

@@ -67,10 +67,11 @@ export function PayrollDashboard() {
     );
   }
 
-  const kpis = data?.kpis || {};
-  const deptCosts = data?.departmentSalaries || [];
-  const monthlyTrend = data?.monthlyTrends || [];
-  const anomalies = data?.alerts || [];
+  const kpis = (data && typeof data.kpis === 'object') ? data.kpis : {};
+  const deptCosts = Array.isArray(data?.departmentSalaries) ? data.departmentSalaries : [];
+  const monthlyTrend = Array.isArray(data?.monthlyTrends) ? data.monthlyTrends : [];
+  const anomalies = Array.isArray(data?.alerts) ? data.alerts : [];
+  const availablePeriods = Array.isArray(data?.availablePeriods) ? data.availablePeriods : ['2026-09', '2026-08', '2026-07'];
   const totalDeptCostSum = deptCosts.reduce((acc, curr) => acc + Number(curr.total_cost || curr.total_net || 0), 0) || 1;
 
   const currentPeriodName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -100,9 +101,15 @@ export function PayrollDashboard() {
               className="bg-transparent text-[#17151F] font-bold outline-none cursor-pointer"
             >
               <option value="" className="bg-white text-[#17151F]">All Periods ({currentPeriodName})</option>
-              {(data?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p) => (
-                <option key={p} value={p} className="bg-white text-[#17151F]">{p}</option>
-              ))}
+              {availablePeriods.map((p) => {
+                const monthVal = typeof p === 'string' ? p : (p.period_month || p.month || '');
+                const monthLabel = typeof p === 'string' ? p : (p.period_label || p.period_month || p.month || monthVal);
+                return (
+                  <option key={monthVal} value={monthVal} className="bg-white text-[#17151F]">
+                    {monthLabel}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

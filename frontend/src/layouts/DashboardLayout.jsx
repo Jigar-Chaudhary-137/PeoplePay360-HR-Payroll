@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useNotify } from '../context/NotificationContext';
 import { AskPeoplePayAI } from '../components/AI/AskPeoplePayAI';
+import { ErrorBoundary } from '../components/common/CommonUI';
 
 export function DashboardLayout() {
   const { user, logout, switchRole, hasRole, isEmployeeOnly } = useAuth();
@@ -261,7 +262,9 @@ export function DashboardLayout() {
 
         {/* Page Viewport */}
         <main className="flex-1 overflow-y-auto p-8 relative bg-[#F8F7FC]">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
 

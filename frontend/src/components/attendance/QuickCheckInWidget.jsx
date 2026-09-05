@@ -21,18 +21,46 @@ export const QuickCheckInWidget = ({ className = '', style = {} }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(false);
 
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const str = String(timeStr).trim();
+    const timePart = str.includes('T') ? str.split('T')[1].slice(0, 5) : (str.includes(' ') ? str.split(' ')[1].slice(0, 5) : str.slice(0, 5));
+    return timePart;
+  };
+
   // Update clock every minute
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Sync today's attendance session on mount
+  useEffect(() => {
+    let isMounted = true;
+    attendanceService.getAttendanceList({ employee_id: user?.employee_id || user?.id })
+      .then((res) => {
+        if (!isMounted) return;
+        const list = res.data || [];
+        const todayRec = list[0];
+        if (todayRec && todayRec.check_in) {
+          setSession({
+            isCheckedIn: !todayRec.check_out,
+            checkInTime: formatTime(todayRec.check_in),
+            checkOutTime: todayRec.check_out ? formatTime(todayRec.check_out) : null,
+            workedHours: todayRec.worked_hours || 0
+          });
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [user]);
+
   const handleCheckIn = async () => {
     setLoading(true);
     try {
       const res = await attendanceService.checkIn(user);
       if (res.success) {
-        const timeStr = res.data.check_in ? res.data.check_in.split(' ')[1] || '09:00' : '09:00';
+        const timeStr = res.data.check_in ? formatTime(res.data.check_in) : '09:00';
         setSession({
           isCheckedIn: true,
           checkInTime: timeStr,
@@ -53,14 +81,14 @@ export const QuickCheckInWidget = ({ className = '', style = {} }) => {
     try {
       const res = await attendanceService.checkOut(user);
       if (res.success) {
-        const outTimeStr = res.data.check_out ? res.data.check_out.split(' ')[1] || '18:00' : '18:00';
+        const outTimeStr = res.data.check_out ? formatTime(res.data.check_out) : '18:00';
         setSession((prev) => ({
           ...prev,
           isCheckedIn: false,
           checkOutTime: outTimeStr,
-          workedHours: res.data.worked_hours || 8.0
+          workedHours: res.data.worked_hours || 0
         }));
-        showToast(`Checked out successfully! Total worked: ${res.data.worked_hours || 8} hrs.`, 'success');
+        showToast(`Checked out successfully! Total worked: ${res.data.worked_hours || 0} hrs.`, 'success');
       }
     } catch (err) {
       showToast(err.message || 'Failed to check out', 'error');

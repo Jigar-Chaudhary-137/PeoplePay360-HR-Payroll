@@ -121,13 +121,21 @@ export function EmployeePortal() {
             <div className="flex items-center justify-between text-sm">
               <span className="text-[#625E6E]">Today's Check-In:</span>
               <span className="font-bold text-[#17151F] font-mono">
-                {todayStatus?.check_in ? todayStatus.check_in.split(' ')[1] || todayStatus.check_in.split('T')[1]?.slice(0, 5) : 'Not Punched'}
+                {todayStatus?.check_in ? (
+                  todayStatus.check_in.includes('T')
+                    ? todayStatus.check_in.split('T')[1].slice(0, 5)
+                    : (todayStatus.check_in.includes(' ') ? todayStatus.check_in.split(' ')[1].slice(0, 5) : todayStatus.check_in.slice(0, 5))
+                ) : 'Not Punched'}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-[#625E6E]">Today's Check-Out:</span>
               <span className="font-bold text-[#17151F] font-mono">
-                {todayStatus?.check_out ? todayStatus.check_out.split(' ')[1] || todayStatus.check_out.split('T')[1]?.slice(0, 5) : 'In Progress'}
+                {todayStatus?.check_out ? (
+                  todayStatus.check_out.includes('T')
+                    ? todayStatus.check_out.split('T')[1].slice(0, 5)
+                    : (todayStatus.check_out.includes(' ') ? todayStatus.check_out.split(' ')[1].slice(0, 5) : todayStatus.check_out.slice(0, 5))
+                ) : 'In Progress'}
               </span>
             </div>
             {todayStatus?.worked_hours > 0 && (
