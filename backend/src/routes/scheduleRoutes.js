@@ -8,6 +8,8 @@ router.use(authenticateToken);
 
 router.get('/', scheduleController.getSchedules);
 router.get('/:id', scheduleController.getScheduleById);
-router.post('/', requireRole('HR Manager'), scheduleController.createSchedule);
+router.post('/', requireRole('HR Manager', 'Admin'), scheduleController.createSchedule);
+router.put('/:id', requireRole('HR Manager', 'Admin'), scheduleController.updateSchedule);
+router.delete('/:id', requireRole('HR Manager', 'Admin'), scheduleController.deleteSchedule);
 
 module.exports = router;

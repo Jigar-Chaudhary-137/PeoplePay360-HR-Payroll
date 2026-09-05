@@ -7,8 +7,9 @@ const { requireRole } = require('../middleware/rbac');
 
 router.use(authenticateToken);
 
-// Departments list — used by frontend filter dropdowns (accessible to HR Manager + Admin)
-router.get('/departments', requireRole('Admin', 'HR Manager'), departmentController.getDepartments);
+// Departments list — used by frontend filter dropdowns (accessible to HR and Admin roles)
+router.get('/departments', requireRole('Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User'), departmentController.getDepartments);
+
 
 // User and role management is restricted to Admin
 router.get('/', requireRole('Admin'), userController.getUsers);

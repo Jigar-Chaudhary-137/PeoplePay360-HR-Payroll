@@ -29,8 +29,15 @@ export function UserManagement() {
         userAPI.getAll(),
         employeeAPI.getAll()
       ]);
-      setUsers(uRes.data || []);
-      setEmployees(empRes.data || []);
+      const rawUsers = uRes.data || uRes || [];
+      setUsers(rawUsers.map(u => ({
+        ...u,
+        work_email: u.work_email || u.email,
+        role: u.role || u.role_name,
+        account_status: u.account_status || u.status || 'Active',
+        emp_code: u.emp_code || u.employee_code
+      })));
+      setEmployees(empRes.data || empRes || []);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -57,11 +64,11 @@ export function UserManagement() {
   const handleOpenEdit = (user) => {
     setEditingUser(user);
     setFormData({
-      work_email: user.work_email,
+      work_email: user.work_email || user.email,
       password: '',
-      role: user.role,
+      role: user.role || user.role_name,
       employee_id: user.employee_id || '',
-      account_status: user.account_status
+      account_status: user.account_status || user.status || 'Active'
     });
     setModalOpen(true);
   };

@@ -69,6 +69,18 @@ async function login(req, res, next) {
     return res.json({
       success: true,
       message: 'Login successful.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role_name,
+        employee_id: user.employee_id,
+        name: user.first_name ? `${user.first_name} ${user.last_name}` : 'Administrator',
+        first_name: user.first_name || (user.role_name === 'Admin' ? 'Admin' : ''),
+        last_name: user.last_name || '',
+        employee_code: user.employee_code,
+        avatar_url: user.avatar_url
+      },
       data: {
         token,
         user: {
@@ -133,7 +145,103 @@ async function getMe(req, res, next) {
   }
 }
 
+const DEMO_ROLE_EMAILS = {
+  'Admin': 'admin@peoplepay360.com',
+  'HR Manager': 'priya.patel@peoplepay360.com',
+  'HR Payroll Admin': 'amit.singh@peoplepay360.com',
+  'HR Payroll User': 'neha.verma@peoplepay360.com',
+  'Employee': 'rahul.sharma@peoplepay360.com'
+};
+
+async function switchDemoRole(req, res, next) {
+  try {
+    const { targetRole } = req.body;
+    const email = DEMO_ROLE_EMAILS[targetRole];
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid demo role: ${targetRole}. Allowed roles: ${Object.keys(DEMO_ROLE_EMAILS).join(', ')}`
+      });
+    }
+
+    const users = await query(
+      `SELECT u.id, u.email, u.status, u.employee_id,
+              r.id AS role_id, r.name AS role_name,
+              e.first_name, e.last_name, e.employee_code, e.avatar_url
+       FROM users u
+       JOIN roles r ON u.role_id = r.id
+       LEFT JOIN employees e ON u.employee_id = e.id
+       WHERE LOWER(u.email) = LOWER(?) LIMIT 1`,
+      [email]
+    );
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Demo user for role ${targetRole} not found in database.`
+      });
+    }
+
+    const user = users[0];
+    if (user.status !== 'Active') {
+      return res.status(403).json({
+        success: false,
+        message: `Demo account ${email} is inactive.`
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role_name,
+        employeeId: user.employee_id
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    await logAudit(user.id, 'DEMO_ROLE_SWITCH', 'user', user.id, { targetRole, email });
+
+    return res.json({
+      success: true,
+      message: `Switched session to ${user.role_name} demo account (${email}).`,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role_name,
+        employee_id: user.employee_id,
+        name: user.first_name ? `${user.first_name} ${user.last_name}` : 'Administrator',
+        first_name: user.first_name || (user.role_name === 'Admin' ? 'Admin' : ''),
+        last_name: user.last_name || '',
+        employee_code: user.employee_code,
+        avatar_url: user.avatar_url
+      },
+      data: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role_name,
+          employee_id: user.employee_id,
+          name: user.first_name ? `${user.first_name} ${user.last_name}` : 'Administrator',
+          first_name: user.first_name || (user.role_name === 'Admin' ? 'Admin' : ''),
+          last_name: user.last_name || '',
+          employee_code: user.employee_code,
+          avatar_url: user.avatar_url
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   login,
-  getMe
+  getMe,
+  switchDemoRole
 };
+

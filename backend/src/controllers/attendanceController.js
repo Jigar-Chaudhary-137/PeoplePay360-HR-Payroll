@@ -277,8 +277,52 @@ async function getTodayStatus(req, res, next) {
   }
 }
 
+async function getAttendanceById(req, res, next) {
+  try {
+    const { id } = req.params;
+    const [record] = await query(
+      `SELECT a.*, 
+              e.first_name, e.last_name, e.employee_code,
+              d.name AS department_name
+       FROM attendance a
+       JOIN employees e ON a.employee_id = e.id
+       LEFT JOIN departments d ON e.department_id = d.id
+       WHERE a.id = ?`,
+      [id]
+    );
+    if (!record) {
+      return res.status(404).json({ success: false, message: `Attendance record ${id} not found.` });
+    }
+    return res.json({ success: true, data: record });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createAttendance(req, res, next) {
+  try {
+    const { employee_id, date, check_in, check_out, break_hours = 1.0, status = 'Present', notes } = req.body;
+    if (!employee_id || !date) {
+      return res.status(400).json({ success: false, message: 'Employee ID and date are required.' });
+    }
+    const workedHours = (check_in && check_out) ? computeWorkedHours(check_in, check_out, break_hours) : 0;
+    const result = await query(
+      `INSERT INTO attendance (employee_id, date, check_in, check_out, break_hours, worked_hours, status, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [employee_id, date, check_in || null, check_out || null, break_hours, workedHours, status, notes || null]
+    );
+    const [created] = await query('SELECT * FROM attendance WHERE id = ?', [result.insertId]);
+    await logAudit(req.user.id, 'ATTENDANCE_MANUAL_CREATE', 'attendance', result.insertId, req.body);
+    return res.status(201).json({ success: true, message: 'Attendance record created successfully.', data: created });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getAttendance,
+  getAttendanceById,
+  createAttendance,
   checkIn,
   checkOut,
   updateAttendance,

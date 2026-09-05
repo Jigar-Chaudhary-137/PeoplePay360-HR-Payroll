@@ -60,10 +60,13 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
         end_date: endDate
       });
 
-      const list = res.data || [];
+      const list = (res.data || []).map((e) => ({
+        ...e,
+        employee_id: e.employee_id || e.id
+      }));
       setEligibleEmployees(list);
       // Auto-select all eligible employees by default
-      setSelectedEmpIds(list.map((e) => e.employee_id));
+      setSelectedEmpIds(list.map((e) => e.employee_id || e.id));
       setStep(2);
     } catch (err) {
       showToast(err.message, 'error');
@@ -76,7 +79,7 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
     if (selectedEmpIds.length === eligibleEmployees.length) {
       setSelectedEmpIds([]);
     } else {
-      setSelectedEmpIds(eligibleEmployees.map((e) => e.employee_id));
+      setSelectedEmpIds(eligibleEmployees.map((e) => e.employee_id || e.id));
     }
   };
 
@@ -101,12 +104,16 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
         period_month: periodMonth,
         start_date: startDate,
         end_date: endDate,
+        period_start: startDate,
+        period_end: endDate,
+        pay_date: endDate,
         salary_structure_id: structureId,
         employee_ids: selectedEmpIds
       });
 
       showToast('Payrun initialized successfully in DRAFT status', 'success');
-      onSuccess(res.payrun_id);
+      const createdId = res.payrun_id || res.data?.id || res.id;
+      onSuccess(createdId);
       onClose();
       // Reset wizard
       setStep(1);

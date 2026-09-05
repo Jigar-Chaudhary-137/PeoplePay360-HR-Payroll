@@ -31,6 +31,51 @@ async function createTimeOffType(req, res, next) {
   }
 }
 
+async function getTimeOffTypeById(req, res, next) {
+  try {
+    const { id } = req.params;
+    const [type] = await query('SELECT * FROM time_off_types WHERE id = ?', [id]);
+    if (!type) {
+      return res.status(404).json({ success: false, message: `Time off type ${id} not found.` });
+    }
+    return res.json({ success: true, data: type });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateTimeOffType(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { name, unit, requires_allocation, requires_approval, is_active } = req.body;
+    const [existing] = await query('SELECT * FROM time_off_types WHERE id = ?', [id]);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: `Time off type ${id} not found.` });
+    }
+    await query(
+      `UPDATE time_off_types SET
+         name = COALESCE(?, name),
+         unit = COALESCE(?, unit),
+         requires_allocation = COALESCE(?, requires_allocation),
+         requires_approval = COALESCE(?, requires_approval),
+         is_active = COALESCE(?, is_active)
+       WHERE id = ?`,
+      [
+        name || null,
+        unit || null,
+        requires_allocation !== undefined ? requires_allocation : null,
+        requires_approval !== undefined ? requires_approval : null,
+        is_active !== undefined ? is_active : null,
+        id
+      ]
+    );
+    const [updated] = await query('SELECT * FROM time_off_types WHERE id = ?', [id]);
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // 2. Time Off Allocations
 async function getTimeOffAllocations(req, res, next) {
   try {
@@ -136,9 +181,22 @@ async function getTimeOffRequests(req, res, next) {
 async function createTimeOffRequest(req, res, next) {
   try {
     const employeeId = req.user.role === 'Employee' ? req.user.employee_id : (req.body.employee_id || req.user.employee_id);
-    const { time_off_type_id, start_date, end_date, days_requested, reason } = req.body;
+    let { time_off_type_id, leave_type, start_date, end_date, days_requested, duration, reason } = req.body;
 
-    if (!employeeId || !time_off_type_id || !start_date || !end_date || !days_requested) {
+    const requestedDays = days_requested !== undefined ? days_requested : duration;
+
+    // Resolve time_off_type_id if only leave_type was passed
+    if (!time_off_type_id && leave_type) {
+      const [resolvedType] = await query(
+        'SELECT id FROM time_off_types WHERE name = ? OR id = ? LIMIT 1',
+        [leave_type, leave_type]
+      );
+      if (resolvedType) {
+        time_off_type_id = resolvedType.id;
+      }
+    }
+
+    if (!employeeId || !time_off_type_id || !start_date || !end_date || !requestedDays) {
       return res.status(400).json({
         success: false,
         message: 'employee_id, time_off_type_id, start_date, end_date, and days_requested are required.'
@@ -167,10 +225,10 @@ async function createTimeOffRequest(req, res, next) {
       }
 
       const available = Number(allocations[0].allocated_days) - Number(allocations[0].used_days);
-      if (Number(days_requested) > available) {
+      if (Number(requestedDays) > available) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient leave balance. Requested: ${days_requested} days, Available: ${available} days.`
+          message: `Insufficient leave balance. Requested: ${requestedDays} days, Available: ${available} days.`
         });
       }
     }
@@ -180,11 +238,11 @@ async function createTimeOffRequest(req, res, next) {
       `INSERT INTO time_off_requests (
         employee_id, time_off_type_id, start_date, end_date, days_requested, reason, status
       ) VALUES (?, ?, ?, ?, ?, ?, 'Pending')`,
-      [employeeId, time_off_type_id, start_date, end_date, days_requested, reason || null]
+      [employeeId, time_off_type_id, start_date, end_date, requestedDays, reason || null]
     );
 
     const [created] = await query('SELECT * FROM time_off_requests WHERE id = ?', [result.insertId]);
-    await logAudit(req.user.id, 'CREATE_LEAVE_REQUEST', 'time_off_request', result.insertId, { days: days_requested });
+    await logAudit(req.user.id, 'CREATE_LEAVE_REQUEST', 'time_off_request', result.insertId, { days: requestedDays });
 
     return res.status(201).json({
       success: true,
@@ -287,7 +345,8 @@ async function approveTimeOffRequest(req, res, next) {
 async function rejectTimeOffRequest(req, res, next) {
   try {
     const { id } = req.params;
-    const { rejection_reason } = req.body;
+    const { rejection_reason, notes, reason } = req.body;
+    const finalReason = rejection_reason || notes || reason || 'Rejected by management.';
 
     const [existing] = await query('SELECT * FROM time_off_requests WHERE id = ?', [id]);
     if (!existing) {
@@ -302,16 +361,16 @@ async function rejectTimeOffRequest(req, res, next) {
       `UPDATE time_off_requests 
        SET status = 'Rejected', approver_id = ?, rejection_reason = ?, approved_at = NOW() 
        WHERE id = ?`,
-      [req.user.id, rejection_reason || 'Rejected by management.', id]
+      [req.user.id, finalReason, id]
     );
 
-    await logAudit(req.user.id, 'REJECT_LEAVE_REQUEST', 'time_off_request', id, { reason: rejection_reason });
+    await logAudit(req.user.id, 'REJECT_LEAVE_REQUEST', 'time_off_request', id, { reason: finalReason });
 
     // Notify the employee whose leave was rejected
     await notifyEmployee(
       existing.employee_id,
       'Time-Off Request Rejected',
-      `Your request for ${existing.days_requested} day(s) (${existing.start_date} to ${existing.end_date}) was rejected.${rejection_reason ? ` Reason: ${rejection_reason}` : ''}`,
+      `Your request for ${existing.days_requested} day(s) (${existing.start_date} to ${existing.end_date}) was rejected.${finalReason ? ` Reason: ${finalReason}` : ''}`,
       'error'
     );
 
@@ -328,7 +387,9 @@ async function rejectTimeOffRequest(req, res, next) {
 
 module.exports = {
   getTimeOffTypes,
+  getTimeOffTypeById,
   createTimeOffType,
+  updateTimeOffType,
   getTimeOffAllocations,
   createOrUpdateAllocation,
   getTimeOffRequests,

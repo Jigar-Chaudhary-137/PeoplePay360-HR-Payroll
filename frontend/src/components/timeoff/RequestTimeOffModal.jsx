@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/CommonUI';
 import { Calendar, User, FileText, Info, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { timeOffService } from '../../services/timeOffService';
+import { employeeAPI, timeOffAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../context/NotificationContext';
 
@@ -13,12 +14,12 @@ export default function RequestTimeOffModal({
   const { user } = useAuth();
   const { showToast } = useNotify();
 
-  const employees = timeOffService.getEmployees();
-  const leaveTypes = timeOffService.getLeaveTypes();
+  const [employees, setEmployees] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
 
   // Form State
-  const [employeeId, setEmployeeId] = useState('1');
-  const [leaveType, setLeaveType] = useState('Paid Time Off');
+  const [employeeId, setEmployeeId] = useState('');
+  const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
@@ -29,20 +30,43 @@ export default function RequestTimeOffModal({
   const [submitting, setSubmitting] = useState(false);
   const [allocationInfo, setAllocationInfo] = useState(null);
 
-  // Initialize defaults when modal opens
+  // Load real employees and leave types from backend
   useEffect(() => {
     if (isOpen) {
-      // Find matching employee or default to 1
-      const initialEmp = employees.find(e => e.name === `${user?.first_name} ${user?.last_name}`) || employees[0];
-      setEmployeeId(String(initialEmp.id));
-      setLeaveType('Paid Time Off');
-      
-      // Default to today or tomorrow
-      const today = new Date().toISOString().split('T')[0];
-      setStartDate(today);
-      setEndDate(today);
-      setReason('');
-      setErrors({});
+      Promise.all([
+        employeeAPI.getAll(),
+        timeOffAPI.getTypes()
+      ]).then(([empRes, typeRes]) => {
+        const empList = Array.isArray(empRes.data) ? empRes.data : (Array.isArray(empRes) ? empRes : []);
+        const typeList = Array.isArray(typeRes.data) ? typeRes.data : (Array.isArray(typeRes) ? typeRes : []);
+
+        const formattedEmps = empList.map(e => ({
+          id: e.id,
+          name: `${e.first_name || ''} ${e.last_name || ''}`.trim() || e.email,
+          code: e.employee_code || `EMP${e.id}`,
+          department: e.department_name || 'General'
+        }));
+
+        setEmployees(formattedEmps);
+        setLeaveTypes(typeList);
+
+        if (formattedEmps.length > 0) {
+          const userEmp = formattedEmps.find(e => e.id === user?.employee_id || e.id === user?.id) || formattedEmps[0];
+          setEmployeeId(String(userEmp.id));
+        }
+
+        if (typeList.length > 0) {
+          setLeaveType(typeList[0].name);
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        setStartDate(today);
+        setEndDate(today);
+        setReason('');
+        setErrors({});
+      }).catch((err) => {
+        showToast('Failed to load employee or leave type data', 'error');
+      });
     }
   }, [isOpen, user]);
 
@@ -101,15 +125,14 @@ export default function RequestTimeOffModal({
     setSubmitting(true);
     try {
       const selectedEmp = employees.find(e => String(e.id) === String(employeeId));
+      const selectedTypeObj = leaveTypes.find(t => t.name === leaveType);
       const payload = {
         employee_id: Number(employeeId),
-        employee_name: selectedEmp ? selectedEmp.name : 'Aarav Mehta',
-        employee_code: selectedEmp ? selectedEmp.code : 'EMP001',
-        department: selectedEmp ? selectedEmp.department : 'Engineering',
-        manager_name: selectedEmp ? selectedEmp.manager : 'Sara Khan',
+        time_off_type_id: selectedTypeObj ? selectedTypeObj.id : undefined,
         leave_type: leaveType,
         start_date: startDate,
         end_date: endDate,
+        days_requested: calculatedDays,
         duration: calculatedDays,
         reason: reason.trim()
       };

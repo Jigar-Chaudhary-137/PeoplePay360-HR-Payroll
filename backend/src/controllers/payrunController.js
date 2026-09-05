@@ -9,7 +9,10 @@ const { notifyPayrollAdmins } = require('../services/notificationService');
  */
 async function getEligibleEmployees(req, res, next) {
   try {
-    const { salary_structure_id, period_start, period_end } = req.query;
+    const { salary_structure_id } = req.query;
+    const period_start = req.query.period_start || req.query.start_date;
+    const period_end = req.query.period_end || req.query.end_date;
+
     if (!salary_structure_id || !period_start || !period_end) {
       return res.status(400).json({
         success: false,
@@ -18,10 +21,12 @@ async function getEligibleEmployees(req, res, next) {
     }
 
     const employees = await query(
-      `SELECT e.id, e.employee_code, e.first_name, e.last_name, e.email,
+      `SELECT e.id, e.id AS employee_id, 
+              e.employee_code, e.employee_code AS emp_code,
+              e.first_name, e.last_name, e.email,
               e.bank_name, e.bank_account_no, e.bank_ifsc,
               d.name AS department_name,
-              jp.title AS job_position_title,
+              jp.title AS job_position_title, jp.title AS job_title,
               c.id AS contract_id, c.contract_code, c.wage, c.start_date, c.end_date
        FROM employees e
        JOIN contracts c ON e.id = c.employee_id
@@ -140,23 +145,50 @@ async function createPayrun(req, res, next) {
       salary_structure_id,
       period_start,
       period_end,
+      start_date,
+      end_date,
       pay_date,
-      employee_selections = [] // Array of { employee_id, contract_id }
+      employee_selections = [], // Array of { employee_id, contract_id }
+      employee_ids = []
     } = req.body;
 
-    if (!name || !salary_structure_id || !period_start || !period_end || !pay_date) {
+    const finalStart = period_start || start_date;
+    const finalEnd = period_end || end_date;
+    const finalPayDate = pay_date || finalEnd;
+
+    if (!name || !salary_structure_id || !finalStart || !finalEnd) {
       await conn.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Name, salary_structure_id, period_start, period_end, and pay_date are required.'
+        message: 'Name, salary_structure_id, period_start/start_date, and period_end/end_date are required.'
       });
     }
 
-    if (employee_selections.length === 0) {
+    // Build selections from employee_selections or employee_ids
+    let selections = [...employee_selections];
+    if (selections.length === 0 && Array.isArray(employee_ids) && employee_ids.length > 0) {
+      for (const empId of employee_ids) {
+        const idVal = typeof empId === 'object' ? (empId.employee_id || empId.id) : empId;
+        if (!idVal) continue;
+        const [contracts] = await conn.query(
+          `SELECT id FROM contracts 
+           WHERE employee_id = ? AND salary_structure_id = ? 
+             AND status IN ('Running', 'Expired') 
+           ORDER BY id DESC LIMIT 1`,
+          [idVal, salary_structure_id]
+        );
+        const contractId = contracts && contracts.length > 0 ? contracts[0].id : null;
+        if (contractId) {
+          selections.push({ employee_id: idVal, contract_id: contractId });
+        }
+      }
+    }
+
+    if (selections.length === 0) {
       await conn.rollback();
       return res.status(400).json({
         success: false,
-        message: 'At least one employee must be selected to create a payrun.'
+        message: 'At least one employee with a valid contract must be selected to create a payrun.'
       });
     }
 
@@ -165,13 +197,13 @@ async function createPayrun(req, res, next) {
       `INSERT INTO payruns (
         name, salary_structure_id, period_start, period_end, pay_date, status, created_by
       ) VALUES (?, ?, ?, ?, ?, 'draft', ?)`,
-      [name, salary_structure_id, period_start, period_end, pay_date, req.user?.id || null]
+      [name, salary_structure_id, finalStart, finalEnd, finalPayDate, req.user?.id || null]
     );
 
     const payrunId = resPayrun.insertId;
 
     // Insert selected employees
-    for (const sel of employee_selections) {
+    for (const sel of selections) {
       await conn.query(
         `INSERT INTO payrun_employees (payrun_id, employee_id, contract_id, status)
          VALUES (?, ?, ?, 'included')`,
@@ -180,12 +212,13 @@ async function createPayrun(req, res, next) {
     }
 
     await conn.commit();
-    await logAudit(req.user?.id, 'CREATE_PAYRUN', 'payrun', payrunId, { name, period_start, period_end, count: employee_selections.length });
+    await logAudit(req.user?.id, 'CREATE_PAYRUN', 'payrun', payrunId, { name, period_start: finalStart, period_end: finalEnd, count: selections.length });
 
     const [created] = await query('SELECT * FROM payruns WHERE id = ?', [payrunId]);
     return res.status(201).json({
       success: true,
       message: 'Payrun created in draft state.',
+      payrun_id: payrunId,
       data: created
     });
   } catch (error) {

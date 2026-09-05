@@ -24,6 +24,8 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const userRoutes = require('./routes/userRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const workLocationRoutes = require('./routes/workLocationRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 
@@ -59,6 +61,8 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/work-locations', workLocationRoutes);
+app.use('/api/locations', workLocationRoutes);
 app.use('/api/time-off', timeOffRoutes);
 app.use('/api/salary-config', salaryConfigRoutes);
 app.use('/api/salary', salaryConfigRoutes);
@@ -68,6 +72,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // Error Handling
 app.use(notFoundHandler);

@@ -14,6 +14,13 @@ async function getDepartments(req, res, next) {
        ORDER BY d.name ASC`
     );
 
+    for (const d of departments) {
+      d.positions = await query(
+        'SELECT * FROM job_positions WHERE department_id = ? ORDER BY title ASC',
+        [d.id]
+      );
+    }
+
     return res.json({
       success: true,
       data: departments

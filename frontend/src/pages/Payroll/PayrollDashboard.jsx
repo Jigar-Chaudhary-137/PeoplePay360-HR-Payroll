@@ -100,9 +100,13 @@ export function PayrollDashboard() {
               className="bg-transparent text-slate-800 font-bold outline-none cursor-pointer"
             >
               <option value="">All Periods ({currentPeriodName})</option>
-              {(data?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
+              {(data?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p, idx) => {
+                const val = typeof p === 'object' && p !== null ? p.period_month : p;
+                const label = typeof p === 'object' && p !== null ? (p.period_label || p.period_month) : p;
+                return (
+                  <option key={val || idx} value={val}>{label}</option>
+                );
+              })}
             </select>
           </div>
 

@@ -3,6 +3,7 @@ import { Clock, LogIn, LogOut, CheckCircle2, ShieldCheck, MapPin } from 'lucide-
 import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../context/NotificationContext';
 import { attendanceService } from '../../services/attendanceService';
+import { attendanceAPI } from '../../services/api';
 
 export const QuickCheckInWidget = ({ className = '', style = {}, onSuccess }) => {
   const { user } = useAuth();
@@ -23,25 +24,63 @@ export const QuickCheckInWidget = ({ className = '', style = {}, onSuccess }) =>
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    attendanceAPI.getToday()
+      .then((res) => {
+        if (!isMounted) return;
+        const todayRec = res?.data || res;
+        if (todayRec && todayRec.check_in) {
+          setSession({
+            isCheckedIn: !todayRec.check_out,
+            checkInTime: todayRec.check_in,
+            checkOutTime: todayRec.check_out || null,
+            workedHours: Number(todayRec.worked_hours || 0)
+          });
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [user]);
+
   const handleCheckIn = async () => {
     setLoading(true);
-    try {
-      const res = await attendanceService.checkIn(user);
-      if (res.success) {
-        const timeStr = res.data.check_in ? res.data.check_in.split(' ')[1] || '09:00' : '09:00';
-        setSession({
-          isCheckedIn: true,
-          checkInTime: timeStr,
-          checkOutTime: null,
-          workedHours: 0
-        });
-        showToast('Checked in successfully with GPS verification!', 'success');
-        if (onSuccess) onSuccess();
+    const performCheckIn = async (coords = {}) => {
+      try {
+        const res = await attendanceService.checkIn(user, coords);
+        if (res.success) {
+          const rec = res.data;
+          const timeStr = rec?.check_in
+            ? (rec.check_in.includes(' ') ? rec.check_in.split(' ')[1] : rec.check_in)
+            : new Date().toTimeString().slice(0, 5);
+          setSession({
+            isCheckedIn: true,
+            checkInTime: timeStr,
+            checkOutTime: null,
+            workedHours: 0
+          });
+          showToast('Checked in successfully with GPS verification!', 'success');
+          if (onSuccess) onSuccess();
+        }
+      } catch (err) {
+        showToast(err.message || 'Failed to check in', 'error');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      showToast(err.message || 'Failed to check in', 'error');
-    } finally {
-      setLoading(false);
+    };
+
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => performCheckIn({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        }),
+        () => performCheckIn(),
+        { timeout: 5000, enableHighAccuracy: true }
+      );
+    } else {
+      performCheckIn();
     }
   };
 
@@ -50,14 +89,17 @@ export const QuickCheckInWidget = ({ className = '', style = {}, onSuccess }) =>
     try {
       const res = await attendanceService.checkOut(user);
       if (res.success) {
-        const outTimeStr = res.data.check_out ? res.data.check_out.split(' ')[1] || '18:00' : '18:00';
+        const rec = res.data;
+        const outTimeStr = rec?.check_out
+          ? (rec.check_out.includes(' ') ? rec.check_out.split(' ')[1] : rec.check_out)
+          : new Date().toTimeString().slice(0, 5);
         setSession((prev) => ({
           ...prev,
           isCheckedIn: false,
           checkOutTime: outTimeStr,
-          workedHours: res.data.worked_hours || 8.0
+          workedHours: rec?.worked_hours || 8.0
         }));
-        showToast(`Checked out successfully! Total worked: ${res.data.worked_hours || 8} hrs.`, 'success');
+        showToast(`Checked out successfully! Total worked: ${rec?.worked_hours || 8} hrs.`, 'success');
         if (onSuccess) onSuccess();
       }
     } catch (err) {

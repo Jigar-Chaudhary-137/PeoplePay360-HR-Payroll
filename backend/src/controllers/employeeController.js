@@ -119,6 +119,16 @@ async function getEmployeeById(req, res, next) {
       [id]
     );
 
+    // Fetch related payslips
+    const payslips = await query(
+      `SELECT ps.*, pr.name AS payrun_name
+       FROM payslips ps
+       JOIN payruns pr ON ps.payrun_id = pr.id
+       WHERE ps.employee_id = ?
+       ORDER BY ps.period_start DESC`,
+      [id]
+    );
+
     return res.json({
       success: true,
       data: {
@@ -126,7 +136,12 @@ async function getEmployeeById(req, res, next) {
         contracts,
         attendance,
         time_off_requests: timeOffRequests,
-        time_off_allocations: timeOffAllocations
+        timeOffRequests,
+        leaves: timeOffRequests,
+        time_off_allocations: timeOffAllocations,
+        leaveAllocations: timeOffAllocations,
+        allocations: timeOffAllocations,
+        payslips
       }
     });
   } catch (error) {

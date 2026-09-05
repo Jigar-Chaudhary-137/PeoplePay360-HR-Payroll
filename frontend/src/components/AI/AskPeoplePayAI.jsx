@@ -38,10 +38,11 @@ export function AskPeoplePayAI({ isOpen, onClose }) {
 
     try {
       const res = await aiAPI.ask(q);
+      const answerText = res.data?.answer || res.answer || "I processed your request using PeoplePay360 verified data.";
       const botMsg = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: res.answer || "I processed your request using PeoplePay360 verified data.",
+        text: answerText,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, botMsg]);

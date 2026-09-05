@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Calendar, AlertCircle } from 'lucide-react';
-import { MOCK_EMPLOYEE_LIST } from '../../data/attendanceMockData';
+import { employeeAPI } from '../../services/api';
 import { attendanceService } from '../../services/attendanceService';
 import { useNotify } from '../../context/NotificationContext';
 
@@ -15,6 +15,8 @@ export const ManualCorrectionModal = ({
 }) => {
   const isEdit = Boolean(record && record.id);
   const { showToast } = useNotify();
+
+  const [employeeList, setEmployeeList] = useState([]);
 
   const [formData, setFormData] = useState({
     employee_id: 1,
@@ -31,6 +33,30 @@ export const ManualCorrectionModal = ({
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && !record) {
+      employeeAPI.getAll().then((res) => {
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+        const formatted = list.map(e => ({
+          id: e.id,
+          name: `${e.first_name || ''} ${e.last_name || ''}`.trim() || e.email,
+          code: e.employee_code || `EMP${e.id}`,
+          department: e.department_name || 'General'
+        }));
+        setEmployeeList(formatted);
+        if (formatted.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            employee_id: formatted[0].id,
+            employee_name: formatted[0].name,
+            employee_code: formatted[0].code,
+            department: formatted[0].department
+          }));
+        }
+      }).catch(() => {});
+    }
+  }, [isOpen, record]);
 
   useEffect(() => {
     if (record) {
@@ -54,12 +80,11 @@ export const ManualCorrectionModal = ({
         correction_reason: record.notes || ''
       });
     } else {
-      const defaultEmp = MOCK_EMPLOYEE_LIST[0] || { id: 1, name: 'Rahul Sharma', code: 'EMP001', department: 'Engineering' };
       setFormData({
-        employee_id: defaultEmp.id,
-        employee_name: defaultEmp.name,
-        employee_code: defaultEmp.code,
-        department: defaultEmp.department,
+        employee_id: employeeList[0]?.id || 1,
+        employee_name: employeeList[0]?.name || '',
+        employee_code: employeeList[0]?.code || '',
+        department: employeeList[0]?.department || '',
         date: new Date().toISOString().split('T')[0],
         check_in: '09:00',
         check_out: '18:00',
@@ -75,7 +100,7 @@ export const ManualCorrectionModal = ({
 
   const handleEmployeeChange = (e) => {
     const empId = Number(e.target.value);
-    const emp = MOCK_EMPLOYEE_LIST.find((item) => item.id === empId);
+    const emp = employeeList.find((item) => item.id === empId);
     if (emp) {
       setFormData((prev) => ({
         ...prev,
@@ -204,7 +229,7 @@ export const ManualCorrectionModal = ({
                 onChange={handleEmployeeChange}
                 className="form-select text-sm w-full"
               >
-                {MOCK_EMPLOYEE_LIST.map((emp) => (
+                {employeeList.map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.name} ({emp.code}) - {emp.department}
                   </option>

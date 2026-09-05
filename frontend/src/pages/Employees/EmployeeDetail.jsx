@@ -293,15 +293,14 @@ export function EmployeeDetail() {
                         <Link to={`/payslips/${ps.id}`} className="btn-secondary text-xs py-1 px-2.5">
                           Inspect
                         </Link>
-                        <a
-                          href={payslipAPI.getPDFUrl(ps.id)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-primary text-xs py-1 px-2.5"
+                        <button
+                          type="button"
+                          onClick={() => payslipAPI.downloadPDF(ps.id, `payslip-${employee.employee_code || ps.id}.pdf`)}
+                          className="btn-primary text-xs py-1 px-2.5 cursor-pointer"
                         >
                           <Download size={13} />
                           <span>PDF</span>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>

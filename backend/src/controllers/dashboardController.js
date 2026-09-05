@@ -2,7 +2,17 @@ const { query } = require('../config/db');
 
 async function getDashboardMetrics(req, res, next) {
   try {
-    const { department_id, start_date, end_date } = req.query;
+    let { department_id, start_date, end_date, period_month, period } = req.query;
+    const targetMonth = period_month || period;
+    if (targetMonth && (!start_date || !end_date)) {
+      const yearMonth = targetMonth.slice(0, 7);
+      const [y, m] = yearMonth.split('-').map(Number);
+      if (y && m) {
+        const lastDay = new Date(y, m, 0).getDate();
+        start_date = `${yearMonth}-01`;
+        end_date = `${yearMonth}-${String(lastDay).padStart(2, '0')}`;
+      }
+    }
 
     // 1. Total Net Salary Paid (from finalized/paid payslips)
     let salarySql = `
@@ -143,22 +153,35 @@ async function getDashboardMetrics(req, res, next) {
       });
     }
 
+    const availablePeriods = await query(
+      `SELECT DISTINCT DATE_FORMAT(period_start, '%Y-%m') AS period_month,
+                       DATE_FORMAT(period_start, '%M %Y') AS period_label,
+                       period_start, period_end
+       FROM payruns
+       ORDER BY period_start DESC`
+    );
+
     return res.json({
       success: true,
       data: {
         kpis: {
           totalNetPaid: Number(salaryStats.total_net_paid),
+          totalNetPayroll: Number(salaryStats.total_net_paid),
           totalGrossPaid: Number(salaryStats.total_gross_paid),
           totalDeductionsPaid: Number(salaryStats.total_deductions_paid),
           payslipsGenerated: Number(salaryStats.total_payslips_count),
+          payslipsIssued: Number(salaryStats.total_payslips_count),
           averageSalary: Math.round(Number(salaryStats.average_net_salary)),
+          avgNetSalary: Math.round(Number(salaryStats.average_net_salary)),
           totalEmployees: Number(empStats.total_employees),
           activeEmployees: Number(empStats.active_employees),
           approvedTimeOffDays: Number(leaveStats.total_approved_leave_days),
+          approvedLeaves: Number(leaveStats.total_approved_leave_days),
           attendanceHealthPercent
         },
         departmentSalaries,
         monthlyTrends,
+        availablePeriods,
         alerts
       }
     });

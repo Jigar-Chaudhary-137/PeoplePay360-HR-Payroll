@@ -195,15 +195,14 @@ export function EmployeePortal() {
                 <Link to={`/payslips/${latestPayslip.id}`} className="btn-secondary text-xs py-2 flex-1 text-center justify-center">
                   View Full Breakdown
                 </Link>
-                <a
-                  href={payslipAPI.getPDFUrl(latestPayslip.id)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-primary text-xs py-2 flex-1 text-center justify-center"
+                <button
+                  type="button"
+                  onClick={() => payslipAPI.downloadPDF(latestPayslip.id, `payslip-${latestPayslip.id}.pdf`)}
+                  className="btn-primary text-xs py-2 flex-1 text-center justify-center cursor-pointer"
                 >
                   <Download size={14} />
                   <span>Download PDF</span>
-                </a>
+                </button>
               </div>
             </div>
           ) : (

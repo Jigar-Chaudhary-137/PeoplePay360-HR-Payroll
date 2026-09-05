@@ -47,6 +47,58 @@ export function LoadingSpinner({ text = 'Loading data...' }) {
   );
 }
 
+export function ErrorState({ title = 'Failed to load data', message, onRetry }) {
+  return (
+    <div className="glass-card p-8 text-center flex flex-col items-center justify-center space-y-4">
+      <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20">
+        <AlertCircle size={24} />
+      </div>
+      <div>
+        <h4 className="text-lg font-bold text-slate-100">{title}</h4>
+        {message && <p className="text-sm text-slate-400 max-w-md mt-1">{message}</p>}
+      </div>
+      {onRetry && (
+        <button onClick={onRetry} className="btn-secondary text-xs">
+          Try Again
+        </button>
+      )}
+    </div>
+  );
+}
+
+export class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 max-w-2xl mx-auto my-12">
+          <ErrorState
+            title="Something went wrong displaying this page"
+            message={this.state.error?.message || 'An unexpected rendering error occurred.'}
+            onRetry={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
+          />
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function EmptyState({ icon: Icon, title, description, actionText, onAction }) {
   return (
     <div className="glass-card p-12 text-center flex flex-col items-center justify-center">

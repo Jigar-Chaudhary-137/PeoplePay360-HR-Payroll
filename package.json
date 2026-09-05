@@ -1,19 +1,16 @@
 {
-  "dependencies": {
-    "mysql2": "^3.24.3"
-  },
   "name": "peoplepay360-hr-payroll",
   "version": "1.0.0",
-  "description": "",
+  "description": "PeoplePay360 HR & Payroll Management System",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
-  "devDependencies": {
-    "concurrently": "^10.0.5"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,cyan.bold\" \"npm run dev:backend\" \"npm run dev:frontend\""
   },
   "repository": {
     "type": "git",
@@ -26,5 +23,11 @@
   "bugs": {
     "url": "https://github.com/Jigar-Chaudhary-137/PeoplePay360-HR-Payroll/issues"
   },
-  "homepage": "https://github.com/Jigar-Chaudhary-137/PeoplePay360-HR-Payroll#readme"
+  "homepage": "https://github.com/Jigar-Chaudhary-137/PeoplePay360-HR-Payroll#readme",
+  "dependencies": {
+    "mysql2": "^3.24.3"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
 }

@@ -340,16 +340,15 @@ export function PayrunDetail() {
                           <Eye size={13} />
                           <span>Inspect</span>
                         </Link>
-                        <a
-                          href={payslipAPI.getPDFUrl(ps.id)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-primary text-xs py-1 px-2.5"
+                        <button
+                          type="button"
+                          onClick={() => payslipAPI.downloadPDF(ps.id, `payslip-${ps.employee_code || ps.id}.pdf`)}
+                          className="btn-primary text-xs py-1 px-2.5 cursor-pointer"
                           title="Download PDF"
                         >
                           <Download size={13} />
                           <span>PDF</span>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>

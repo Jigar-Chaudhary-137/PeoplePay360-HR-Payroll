@@ -5,14 +5,16 @@ const { logAudit } = require('../utils/auditLogger');
 async function getUsers(req, res, next) {
   try {
     const users = await query(
-      `SELECT u.id, u.email, u.status, u.employee_id, u.created_at,
-              r.id AS role_id, r.name AS role_name,
-              e.first_name, e.last_name, e.employee_code, e.avatar_url,
-              d.name AS department_name
+      `SELECT u.id, u.email, u.email AS work_email, u.status, u.status AS account_status,
+              u.employee_id, u.created_at,
+              r.id AS role_id, r.name AS role_name, r.name AS role,
+              e.first_name, e.last_name, e.employee_code, e.employee_code AS emp_code, e.avatar_url,
+              d.name AS department_name, jp.title AS job_title
        FROM users u
        JOIN roles r ON u.role_id = r.id
        LEFT JOIN employees e ON u.employee_id = e.id
        LEFT JOIN departments d ON e.department_id = d.id
+       LEFT JOIN job_positions jp ON e.job_position_id = jp.id
        ORDER BY u.id ASC`
     );
 
@@ -33,7 +35,15 @@ async function getRoles(req, res, next) {
 
 async function createUser(req, res, next) {
   try {
-    const { employee_id, email, password, role_id, status = 'Active' } = req.body;
+    let { employee_id, email, work_email, password, role_id, role, status = 'Active', account_status } = req.body;
+    email = email || work_email;
+    status = status || account_status || 'Active';
+
+    if (!role_id && role) {
+      const [r] = await query('SELECT id FROM roles WHERE LOWER(name) = LOWER(?) LIMIT 1', [role]);
+      if (r) role_id = r.id;
+    }
+
     if (!email || !password || !role_id) {
       return res.status(400).json({ success: false, message: 'email, password, and role_id are required.' });
     }
@@ -49,7 +59,8 @@ async function createUser(req, res, next) {
     await logAudit(req.user?.id, 'CREATE_USER', 'user', result.insertId, { email, role_id });
 
     const [created] = await query(
-      `SELECT u.id, u.email, u.status, u.employee_id, r.name AS role_name
+      `SELECT u.id, u.email, u.email AS work_email, u.status, u.status AS account_status,
+              u.employee_id, r.id AS role_id, r.name AS role_name, r.name AS role
        FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?`,
       [result.insertId]
     );
@@ -66,7 +77,14 @@ async function createUser(req, res, next) {
 async function updateUser(req, res, next) {
   try {
     const { id } = req.params;
-    const { employee_id, email, password, role_id, status } = req.body;
+    let { employee_id, email, work_email, password, role_id, role, status, account_status } = req.body;
+    email = email || work_email;
+    status = status || account_status;
+
+    if (!role_id && role) {
+      const [r] = await query('SELECT id FROM roles WHERE LOWER(name) = LOWER(?) LIMIT 1', [role]);
+      if (r) role_id = r.id;
+    }
 
     let hash = null;
     if (password && password.trim()) {
@@ -95,7 +113,8 @@ async function updateUser(req, res, next) {
     await logAudit(req.user?.id, 'UPDATE_USER', 'user', id, { email, role_id, status });
 
     const [updated] = await query(
-      `SELECT u.id, u.email, u.status, u.employee_id, r.name AS role_name
+      `SELECT u.id, u.email, u.email AS work_email, u.status, u.status AS account_status,
+              u.employee_id, r.id AS role_id, r.name AS role_name, r.name AS role
        FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?`,
       [id]
     );
