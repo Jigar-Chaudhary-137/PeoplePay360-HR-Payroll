@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { Login } from './pages/Auth/Login';
+import { ForgotPassword } from './pages/Auth/ForgotPassword';
 import { PayrollDashboard } from './pages/Payroll/PayrollDashboard';
 import { EmployeeList } from './pages/Employees/EmployeeList';
 import { EmployeeDetail } from './pages/Employees/EmployeeDetail';
@@ -55,8 +56,9 @@ export default function App() {
       <NotificationProvider>
         <AuthProvider>
           <Routes>
-            {/* Public Login */}
+            {/* Public Authentication Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
             {/* Protected App Routes */}
             <Route
