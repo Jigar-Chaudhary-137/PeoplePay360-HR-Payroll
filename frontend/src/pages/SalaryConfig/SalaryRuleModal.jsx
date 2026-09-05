@@ -191,17 +191,17 @@ export function SalaryRuleModal({ isOpen, onClose, rule, onSuccess }) {
             <input
               type="text"
               placeholder="e.g. BASIC + HRA + CONV - PF"
-              className="form-input font-mono text-sky-400 font-bold"
+              className="form-input font-mono text-blue-600 font-bold"
               value={formData.formula_expression}
               onChange={(e) => setFormData({ ...formData, formula_expression: e.target.value })}
             />
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[10px] text-slate-500 mt-1">
               Supports previous sequence rule codes (BASIC, HRA, GROSS, etc.) and arithmetic operators (+, -, *, /).
             </p>
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
           <button type="button" onClick={onClose} className="btn-secondary">
             Cancel
           </button>

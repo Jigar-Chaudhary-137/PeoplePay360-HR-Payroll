@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Edit, Clock, Calendar, Building, 
-  User, CheckCircle2, AlertCircle, FileText, Shield
+  User, CheckCircle2, AlertCircle, FileText, Shield, MapPin, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../context/NotificationContext';
 import { attendanceService } from '../../services/attendanceService';
 import ManualCorrectionModal from '../../components/attendance/ManualCorrectionModal';
+import { Badge, LoadingSpinner } from '../../components/common/CommonUI';
 
 /**
- * Page 2: Attendance Detail Page (/attendance/:attendanceId)
+ * Enterprise Attendance Detail Page (/attendance/:attendanceId)
  */
 export function AttendanceDetailPage() {
   const { attendanceId } = useParams();
@@ -48,368 +49,207 @@ export function AttendanceDetailPage() {
 
   const canEdit = hasRole('Admin', 'HR Manager', 'HR Payroll Admin');
 
-  const getStatusBadge = (status) => {
-    const s = (status || '').toLowerCase();
-    switch (s) {
-      case 'present':
-        return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 600, backgroundColor: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0' }}>
-            <span style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#10B981' }} />
-            Present
-          </span>
-        );
-      case 'late':
-        return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 600, backgroundColor: '#FFFBEB', color: '#B45309', border: '1px solid #FDE68A' }}>
-            <span style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
-            Late
-          </span>
-        );
-      case 'half day':
-      case 'half_day':
-        return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 600, backgroundColor: '#F5F3FF', color: '#6D28D9', border: '1px solid #DDD6FE' }}>
-            <span style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#8B5CF6' }} />
-            Half Day
-          </span>
-        );
-      case 'absent':
-        return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 600, backgroundColor: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA' }}>
-            <span style={{ width: '0.375rem', height: '0.375rem', borderRadius: '50%', backgroundColor: '#EF4444' }} />
-            Absent
-          </span>
-        );
-      default:
-        return (
-          <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 500, backgroundColor: '#F1F5F9', color: '#475569' }}>
-            {status || '—'}
-          </span>
-        );
-    }
-  };
-
   if (loading) {
-    return (
-      <div style={{ padding: '5rem 0', textAlign: 'center', color: '#64748B' }}>
-        <div style={{ display: 'inline-block', width: '2.5rem', height: '2.5rem', border: '3px solid #E2E8F0', borderTopColor: '#2563EB', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <p style={{ marginTop: '1rem', fontSize: '0.9375rem', fontWeight: 500 }}>Loading attendance record...</p>
-      </div>
-    );
+    return <LoadingSpinner text="Fetching attendance punch log and location verification..." />;
   }
 
   if (error || !record) {
     return (
-      <div style={{ maxWidth: '36rem', margin: '4rem auto', textAlign: 'center', backgroundColor: '#FFFFFF', padding: '3rem', borderRadius: '0.75rem', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-        <AlertCircle size={48} color="#EF4444" style={{ margin: '0 auto 1rem' }} />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>
-          Record Not Found
-        </h2>
-        <p style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '1.5rem' }}>
+      <div className="max-w-md mx-auto my-16 text-center card p-8 space-y-4">
+        <AlertCircle size={44} className="mx-auto text-rose-500" />
+        <h2 className="text-xl font-bold text-slate-900 font-heading">Record Not Found</h2>
+        <p className="text-sm text-slate-500">
           {error || `The attendance record with ID #${attendanceId} could not be located.`}
         </p>
-        <Link
-          to="/attendance"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            backgroundColor: '#2563EB',
-            color: '#FFFFFF',
-            padding: '0.625rem 1.25rem',
-            borderRadius: '0.5rem',
-            textDecoration: 'none',
-            fontWeight: 600,
-            fontSize: '0.875rem'
-          }}
-        >
-          <ArrowLeft size={16} />
+        <Link to="/attendance" className="btn-primary text-xs px-3.5 py-2 inline-flex items-center gap-2">
+          <ArrowLeft size={14} />
           <span>Back to Attendance</span>
         </Link>
       </div>
     );
   }
 
+  const isVerified = record.location_verified === true || record.location_verified === 1;
+
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '3rem' }}>
+    <div className="max-w-4xl mx-auto space-y-6 pb-6">
       {/* Back Link */}
-      <div style={{ marginBottom: '1rem' }}>
-        <Link
-          to="/attendance"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: '#64748B',
-            textDecoration: 'none',
-            transition: 'color 0.15s ease'
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#2563EB')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
-        >
-          <ArrowLeft size={16} />
-          <span>Back to Attendance List</span>
-        </Link>
-      </div>
+      <Link
+        to="/attendance"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+      >
+        <ArrowLeft size={14} />
+        <span>Back to Attendance List</span>
+      </Link>
 
       {/* Header Section */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          marginBottom: '1.5rem'
-        }}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          {/* Breadcrumb Title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#64748B', marginBottom: '0.25rem' }}>
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-0.5">
             <span>Attendance</span>
             <span>/</span>
-            <span style={{ color: '#0F172A', fontWeight: 600 }}>{record.employee_name}</span>
+            <span className="text-slate-700 font-medium">{record.employee_name}</span>
             <span>/</span>
-            <span>{record.date}</span>
+            <span className="text-blue-600 font-mono font-medium">{record.date}</span>
           </div>
 
-          <h1
-            style={{
-              fontSize: '1.75rem',
-              fontWeight: 800,
-              color: '#0F172A',
-              letterSpacing: '-0.025em',
-              margin: 0
-            }}
-          >
+          <h1 className="text-2xl font-bold text-slate-900 font-heading">
             {record.employee_name} • {record.date}
           </h1>
-          <p style={{ fontSize: '0.875rem', color: '#64748B', margin: '0.25rem 0 0 0' }}>
-            Form view of one attendance record
+          <p className="text-xs text-slate-500 mt-0.5">
+            Audit trail and punch verification log
           </p>
         </div>
 
-        {/* Edit Action for Authorized HR */}
         {canEdit && (
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#2563EB',
-              color: '#FFFFFF',
-              padding: '0.625rem 1.25rem',
-              borderRadius: '0.5rem',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px 0 rgba(37, 99, 235, 0.3)',
-              transition: 'background-color 0.15s ease'
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2563EB')}
+            className="btn-primary text-xs px-3.5 py-2 self-start sm:self-auto"
           >
-            <Edit size={16} />
+            <Edit size={14} />
             <span>Edit Record</span>
           </button>
         )}
       </div>
 
       {/* Main Two-Column Detail Card */}
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '0.75rem',
-          border: '1px solid #E2E8F0',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-          overflow: 'hidden',
-          marginBottom: '1.5rem'
-        }}
-      >
+      <div className="card overflow-hidden">
         {/* Card Header Banner */}
-        <div
-          style={{
-            padding: '1.25rem 1.5rem',
-            borderBottom: '1px solid #E2E8F0',
-            backgroundColor: '#F8FAFC',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div
-              style={{
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: '50%',
-                backgroundColor: '#E0E7FF',
-                color: '#3730A3',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1rem',
-                fontWeight: 700,
-                overflow: 'hidden'
-              }}
-            >
+        <div className="p-5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 font-bold text-base flex items-center justify-center overflow-hidden">
               {record.avatar ? (
-                <img src={record.avatar} alt={record.employee_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={record.avatar} alt={record.employee_name} className="w-full h-full object-cover" />
               ) : (
                 record.employee_name?.charAt(0) || 'E'
               )}
             </div>
             <div>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+              <h3 className="text-base font-bold text-slate-900 font-heading">
                 {record.employee_name}
               </h3>
-              <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '0.125rem 0 0 0' }}>
-                {record.employee_code} • {record.department}
+              <p className="text-xs text-slate-500">
+                {record.employee_code} • {record.department || 'General Operations'}
               </p>
             </div>
           </div>
 
-          <div>{getStatusBadge(record.status)}</div>
+          <Badge status={record.status} />
         </div>
 
         {/* Two-Column Field Layout */}
-        <div
-          style={{
-            padding: '1.5rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '2rem'
-          }}
-        >
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Employee */}
+          <div className="space-y-4">
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                Employee
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-heading">
+                Employee Code
               </label>
-              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A' }}>
-                {record.employee_name} ({record.employee_code})
+              <div className="text-sm font-semibold text-slate-900 font-mono">
+                {record.employee_code}
               </div>
             </div>
 
-            {/* Check In */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                Check In
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-heading">
+                Check In Timestamp
               </label>
-              <div style={{ fontSize: '0.9375rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock size={16} color="#64748B" />
-                <span>{record.check_in || '— No check in recorded'}</span>
+              <div className="text-sm text-slate-800 flex items-center gap-2 font-mono">
+                <Clock size={16} className="text-emerald-600" />
+                <span>{record.check_in || '— No check-in recorded'}</span>
               </div>
             </div>
 
-            {/* Check Out */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                Check Out
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-heading">
+                Check Out Timestamp
               </label>
-              <div style={{ fontSize: '0.9375rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock size={16} color="#64748B" />
-                <span>{record.check_out || '— No check out recorded'}</span>
+              <div className="text-sm text-slate-800 flex items-center gap-2 font-mono">
+                <Clock size={16} className="text-blue-600" />
+                <span>{record.check_out || '— No check-out recorded'}</span>
               </div>
             </div>
 
             {/* Worked Hours Highlight */}
-            <div style={{ backgroundColor: '#F8FAFC', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider font-heading">
                 Worked Hours
               </label>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A' }}>
-                {Number(record.worked_hours || 0).toFixed(2)} <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#64748B' }}>hours</span>
+              <div className="text-2xl font-extrabold text-slate-900 font-heading">
+                {Number(record.worked_hours || 0).toFixed(2)} <span className="text-xs font-semibold text-slate-500">hours</span>
               </div>
             </div>
           </div>
 
           {/* Right Column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Department */}
+          <div className="space-y-4">
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-heading">
                 Department
               </label>
-              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Building size={16} color="#64748B" />
-                <span>{record.department || 'General'}</span>
+              <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <Building size={16} className="text-blue-600" />
+                <span>{record.department || 'General Operations'}</span>
               </div>
             </div>
 
-            {/* Manager */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                Manager
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-heading">
+                Reporting Manager
               </label>
-              <div style={{ fontSize: '0.9375rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <User size={16} color="#64748B" />
+              <div className="text-sm text-slate-800 flex items-center gap-2">
+                <User size={16} className="text-slate-400" />
                 <span>{record.manager_name || 'Direct Supervisor'}</span>
               </div>
             </div>
 
-            {/* Status */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                Status
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-heading">
+                Location Verification
               </label>
-              <div>{getStatusBadge(record.status)}</div>
+              <div className="flex items-center gap-2">
+                {isVerified ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <ShieldCheck size={14} />
+                    <span>GPS Radius Verified</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    <MapPin size={14} />
+                    <span>Office Biometric / Manual</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Overtime Highlight */}
-            <div style={{ backgroundColor: '#F8FAFC', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                Overtime
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider font-heading">
+                Overtime Recorded
               </label>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: record.overtime_hours > 0 ? '#2563EB' : '#64748B' }}>
-                {Number(record.overtime_hours || 0).toFixed(2)} <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#64748B' }}>hours</span>
+              <div className={`text-2xl font-extrabold font-heading ${record.overtime_hours > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
+                {Number(record.overtime_hours || 0).toFixed(2)} <span className="text-xs font-semibold text-slate-500">hours</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Full-width Notes & Audit Card */}
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '0.75rem',
-          border: '1px solid #E2E8F0',
-          padding: '1.5rem',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <FileText size={18} color="#2563EB" />
-          <h4 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-            Notes & System Audit
-          </h4>
+      {/* Notes & Audit Card */}
+      <div className="card p-5 space-y-2.5">
+        <div className="flex items-center gap-2 text-blue-600 font-bold text-sm font-heading">
+          <FileText size={17} />
+          <h4>Notes & Verification Audit</h4>
         </div>
 
-        <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>
-          {record.notes || 'System-generated from check-in/out or manually corrected by an authorized user.'}
+        <p className="text-sm text-slate-600 leading-relaxed">
+          {record.notes || 'System-generated from punch telemetry or entered by an authorized HR administrator.'}
         </p>
 
-        <div
-          style={{
-            marginTop: '1rem',
-            paddingTop: '0.75rem',
-            borderTop: '1px dashed #E2E8F0',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontSize: '0.75rem',
-            color: '#94A3B8'
-          }}
-        >
-          <Shield size={14} />
+        <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-400">
+          <Shield size={13} className="text-slate-400" />
           <span>Attendance logs are immutable and tracked for statutory payroll proration and overtime calculation.</span>
         </div>
       </div>

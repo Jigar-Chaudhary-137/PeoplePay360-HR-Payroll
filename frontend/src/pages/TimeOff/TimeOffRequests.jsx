@@ -153,25 +153,25 @@ export function TimeOffRequests() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Top Sub-Navigation Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <TimeOffNavigationTabs />
       </div>
 
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
               Time Off Requests
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
-                {requests.length} Requests
-              </span>
             </h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+              {requests.length} Requests
+            </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            List view opened from Time Off → Requests
+          <p className="text-sm text-slate-500 mt-0.5">
+            Review, approve, and track employee leave requests and balances
           </p>
         </div>
 
@@ -179,36 +179,36 @@ export function TimeOffRequests() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="btn-primary text-xs flex items-center gap-2 shadow-lg shadow-sky-600/25"
+            className="btn-primary text-xs px-3.5 py-2"
           >
             <Plus size={15} />
-            <span>New</span>
+            <span>Apply Leave</span>
           </button>
         </div>
       </div>
 
-      {/* Overview Stat Badges / Cards */}
+      {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="glass-card p-3.5 border-l-4 border-l-sky-500">
-          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Requests</span>
-          <p className="text-xl font-black text-slate-100 mt-0.5">{stats.total}</p>
+        <div className="card p-3.5 border-l-4 border-l-blue-500">
+          <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider font-heading">Total Requests</span>
+          <p className="text-xl font-extrabold text-slate-900 mt-0.5 font-heading">{stats.total}</p>
         </div>
-        <div className="glass-card p-3.5 border-l-4 border-l-amber-500">
-          <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">To Approve</span>
-          <p className="text-xl font-black text-amber-300 mt-0.5">{stats.toApprove}</p>
+        <div className="card p-3.5 border-l-4 border-l-amber-500">
+          <span className="text-[11px] uppercase font-bold text-amber-600 tracking-wider font-heading">To Approve</span>
+          <p className="text-xl font-extrabold text-amber-700 mt-0.5 font-heading">{stats.toApprove}</p>
         </div>
-        <div className="glass-card p-3.5 border-l-4 border-l-emerald-500">
-          <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Approved</span>
-          <p className="text-xl font-black text-emerald-300 mt-0.5">{stats.approved}</p>
+        <div className="card p-3.5 border-l-4 border-l-emerald-500">
+          <span className="text-[11px] uppercase font-bold text-emerald-600 tracking-wider font-heading">Approved</span>
+          <p className="text-xl font-extrabold text-emerald-700 mt-0.5 font-heading">{stats.approved}</p>
         </div>
-        <div className="glass-card p-3.5 border-l-4 border-l-rose-500">
-          <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider">Refused</span>
-          <p className="text-xl font-black text-rose-300 mt-0.5">{stats.refused}</p>
+        <div className="card p-3.5 border-l-4 border-l-rose-500">
+          <span className="text-[11px] uppercase font-bold text-rose-600 tracking-wider font-heading">Refused</span>
+          <p className="text-xl font-extrabold text-rose-700 mt-0.5 font-heading">{stats.refused}</p>
         </div>
       </div>
 
       {/* Toolbar: Search, My Team Filter, Status, Leave Type, Dates */}
-      <div className="glass-card p-4 space-y-3">
+      <div className="card p-4 space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Left Toolbar: Search & My Team Button */}
           <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2.5">
@@ -225,7 +225,7 @@ export function TimeOffRequests() {
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                 >
                   <X size={12} />
                 </button>
@@ -239,14 +239,13 @@ export function TimeOffRequests() {
                 onClick={() => setMyTeamOnly(!myTeamOnly)}
                 className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
                   myTeamOnly
-                    ? 'bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-600/30'
-                    : 'bg-white/5 text-slate-300 hover:text-white border-white/10 hover:bg-white/10'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200'
                 }`}
                 title="Filter only direct team members"
               >
                 <Users size={14} />
                 <span>My Team</span>
-                {myTeamOnly && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5" />}
               </button>
             )}
           </div>
@@ -255,7 +254,7 @@ export function TimeOffRequests() {
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Status Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-400 font-medium">Status:</span>
+              <span className="text-[11px] text-slate-500 font-medium">Status:</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -270,7 +269,7 @@ export function TimeOffRequests() {
 
             {/* Leave Type Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-400 font-medium">Type:</span>
+              <span className="text-[11px] text-slate-500 font-medium">Type:</span>
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
@@ -292,7 +291,7 @@ export function TimeOffRequests() {
                 className="form-input text-xs py-1.5 px-2 w-32"
                 title="From Date"
               />
-              <span className="text-slate-500 text-xs">→</span>
+              <span className="text-slate-400 text-xs">→</span>
               <input
                 type="date"
                 value={endDate}
@@ -307,7 +306,7 @@ export function TimeOffRequests() {
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors"
                 title="Clear all filters"
               >
                 <RotateCcw size={14} />
@@ -318,41 +317,35 @@ export function TimeOffRequests() {
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-white/5 text-[11px]">
-            <span className="text-slate-500">Active Filters:</span>
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 text-[11px]">
+            <span className="text-slate-400 font-medium">Active Filters:</span>
             {search && (
-              <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                 Search: "{search}"
                 <button onClick={() => setSearch('')}><X size={10} /></button>
               </span>
             )}
             {myTeamOnly && (
-              <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                 My Team Only
                 <button onClick={() => setMyTeamOnly(false)}><X size={10} /></button>
               </span>
             )}
             {selectedStatus !== 'All' && (
-              <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                 Status: {selectedStatus}
                 <button onClick={() => setSelectedStatus('All')}><X size={10} /></button>
               </span>
             )}
             {selectedType !== 'All' && (
-              <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                 Type: {selectedType}
                 <button onClick={() => setSelectedType('All')}><X size={10} /></button>
               </span>
             )}
-            {(startDate || endDate) && (
-              <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1">
-                Period: {startDate || 'Any'} to {endDate || 'Any'}
-                <button onClick={() => { setStartDate(''); setEndDate(''); }}><X size={10} /></button>
-              </span>
-            )}
             <button
               onClick={handleClearFilters}
-              className="text-slate-400 hover:text-white underline ml-1 cursor-pointer"
+              className="text-blue-600 hover:text-blue-800 underline ml-1 cursor-pointer font-medium"
             >
               Reset all
             </button>
@@ -366,7 +359,7 @@ export function TimeOffRequests() {
       ) : requests.length === 0 ? (
         <EmptyState
           icon={CalendarOff}
-          title="No time off requests found."
+          title="No time off requests found"
           description={
             hasActiveFilters
               ? 'No requests match your current search or filter criteria. Try resetting filters.'

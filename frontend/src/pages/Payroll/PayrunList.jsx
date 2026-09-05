@@ -31,25 +31,27 @@ export function PayrunList() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
-            Payroll Payruns
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
+              Payroll Runs
+            </h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
               {payruns.length} Payruns
             </span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            2-step payrun generation wizard, dynamic computation engine, validation, and disbursement
+          </div>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Execute salary computations, validate payroll batches, and disburse payments
           </p>
         </div>
 
         {hasRole('HR Payroll Admin', 'HR Payroll User', 'Admin') && (
-          <button onClick={() => setWizardOpen(true)} className="btn-primary text-xs">
+          <button onClick={() => setWizardOpen(true)} className="btn-primary text-xs px-3.5 py-2 self-start sm:self-auto">
             <Plus size={15} />
-            <span>Create Payrun (Wizard)</span>
+            <span>Create Payrun</span>
           </button>
         )}
       </div>
@@ -61,74 +63,73 @@ export function PayrunList() {
         <EmptyState
           icon={DollarSign}
           title="No payruns created yet"
-          description="Click Create Payrun to launch the 2-step wizard and execute salary calculations."
+          description="Click Create Payrun to launch the wizard and execute salary calculations."
           actionText="Launch Payrun Wizard"
           onAction={() => setWizardOpen(true)}
         />
       ) : (
-        <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>Payrun Code</th>
-                  <th>Name & Structure</th>
-                  <th>Period</th>
-                  <th>Staff Count</th>
-                  <th>Total Gross</th>
-                  <th>Total Net Pay</th>
-                  <th>Anomalies</th>
-                  <th>Status</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payruns.map((pr) => (
-                  <tr key={pr.id}>
-                    <td>
-                      <span className="font-mono font-bold text-sky-400">{pr.payrun_code}</span>
-                    </td>
-                    <td>
-                      <Link
-                        to={`/payruns/${pr.id}`}
-                        className="font-bold text-slate-100 hover:text-sky-400 transition-colors block text-sm"
-                      >
-                        {pr.name}
-                      </Link>
-                      <span className="text-[11px] text-slate-400">{pr.structure_name}</span>
-                    </td>
-                    <td className="text-xs text-slate-300 font-semibold">{pr.period_month}</td>
-                    <td>
-                      <span className="font-bold text-slate-100">{pr.employee_count}</span> Staff
-                    </td>
-                    <td className="text-slate-300 text-xs">₹{Number(pr.total_gross || 0).toLocaleString()}</td>
-                    <td>
-                      <span className="font-extrabold text-sky-400 text-sm">
-                        ₹{Number(pr.total_net || 0).toLocaleString()}
+        <div className="custom-table-container">
+          <table className="custom-table">
+            <thead>
+              <tr>
+                <th>Payrun Code</th>
+                <th>Name & Structure</th>
+                <th>Period</th>
+                <th>Staff Count</th>
+                <th>Total Gross</th>
+                <th>Total Net Pay</th>
+                <th>Anomalies</th>
+                <th>Status</th>
+                <th className="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payruns.map((pr) => (
+                <tr key={pr.id}>
+                  <td>
+                    <span className="font-bold text-blue-600 text-sm">{pr.payrun_code || `PR-${pr.id}`}</span>
+                  </td>
+                  <td>
+                    <Link
+                      to={`/payruns/${pr.id}`}
+                      className="font-bold text-slate-900 hover:text-blue-600 transition-colors block text-sm font-heading"
+                    >
+                      {pr.name}
+                    </Link>
+                    <span className="text-xs text-slate-500">{pr.structure_name || 'Regular Structure'}</span>
+                  </td>
+                  <td className="text-sm text-slate-700 font-semibold">{pr.period_month || pr.period_start?.slice(0, 7)}</td>
+                  <td>
+                    <span className="font-bold text-slate-900 text-sm font-heading">{pr.employee_count || 1}</span>{' '}
+                    <span className="text-xs text-slate-500">Staff</span>
+                  </td>
+                  <td className="text-slate-600 text-sm font-medium">₹{Number(pr.total_gross || 0).toLocaleString('en-IN')}</td>
+                  <td>
+                    <span className="font-extrabold text-slate-900 text-sm">
+                      ₹{Number(pr.total_net || 0).toLocaleString('en-IN')}
+                    </span>
+                  </td>
+                  <td>
+                    {Number(pr.anomaly_count) > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                        <ShieldAlert size={12} />
+                        {pr.anomaly_count} Warnings
                       </span>
-                    </td>
-                    <td>
-                      {Number(pr.anomaly_count) > 0 ? (
-                        <span className="flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30">
-                          <ShieldAlert size={12} />
-                          {pr.anomaly_count} Warnings
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-500">0 alerts</span>
-                      )}
-                    </td>
-                    <td><Badge status={pr.status} /></td>
-                    <td className="text-right">
-                      <Link to={`/payruns/${pr.id}`} className="btn-primary text-xs py-1 px-3">
-                        <span>Open Console</span>
-                        <ArrowRight size={13} />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 font-medium">0 alerts</span>
+                    )}
+                  </td>
+                  <td><Badge status={pr.status} /></td>
+                  <td className="text-right">
+                    <Link to={`/payruns/${pr.id}`} className="btn-secondary text-xs py-1.5 px-3">
+                      <span>Console</span>
+                      <ArrowRight size={13} />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -136,7 +137,7 @@ export function PayrunList() {
       <PayrunWizardModal
         isOpen={wizardOpen}
         onClose={() => setWizardOpen(false)}
-        onSuccess={(newId) => {
+        onSuccess={() => {
           loadPayruns();
         }}
       />

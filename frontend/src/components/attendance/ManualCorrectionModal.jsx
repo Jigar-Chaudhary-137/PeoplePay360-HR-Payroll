@@ -34,7 +34,6 @@ export const ManualCorrectionModal = ({
 
   useEffect(() => {
     if (record) {
-      // Extract time part from datetime strings if present
       const extractTime = (str) => {
         if (!str) return '';
         if (str.includes(' ')) return str.split(' ')[1].slice(0, 5);
@@ -55,7 +54,7 @@ export const ManualCorrectionModal = ({
         correction_reason: record.notes || ''
       });
     } else {
-      const defaultEmp = MOCK_EMPLOYEE_LIST[0];
+      const defaultEmp = MOCK_EMPLOYEE_LIST[0] || { id: 1, name: 'Rahul Sharma', code: 'EMP001', department: 'Engineering' };
       setFormData({
         employee_id: defaultEmp.id,
         employee_name: defaultEmp.name,
@@ -159,89 +158,43 @@ export const ManualCorrectionModal = ({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '1rem'
-      }}
+      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '0.75rem',
-          width: '100%',
-          maxWidth: '34rem',
-          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-          border: '1px solid #E2E8F0',
-          overflow: 'hidden'
-        }}
+        className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: '1.25rem 1.5rem',
-            borderBottom: '1px solid #E2E8F0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: '#F8FAFC'
-          }}
-        >
+        <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
           <div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+            <h3 className="text-lg font-bold text-slate-900">
               {isEdit ? 'Manual Attendance Correction' : 'New Attendance Record'}
             </h3>
-            <p style={{ fontSize: '0.8125rem', color: '#64748B', margin: '0.25rem 0 0 0' }}>
+            <p className="text-xs text-slate-500 mt-0.5">
               {isEdit
-                ? `Authorized correction for ${formData.employee_name}`
-                : 'Create a manual attendance entry for an employee'}
+                ? `Authorized audit correction for ${formData.employee_name}`
+                : 'Log a verified attendance entry for an employee'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#64748B',
-              cursor: 'pointer',
-              padding: '0.375rem',
-              borderRadius: '0.375rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Employee Select */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
-              Employee <span style={{ color: '#EF4444' }}>*</span>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Employee <span className="text-rose-500">*</span>
             </label>
             {isEdit ? (
-              <div
-                style={{
-                  padding: '0.625rem 0.875rem',
-                  backgroundColor: '#F1F5F9',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  color: '#1E293B',
-                  fontWeight: 500
-                }}
-              >
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800">
                 {formData.employee_name} ({formData.employee_code}) - {formData.department}
               </div>
             ) : (
@@ -249,16 +202,7 @@ export const ManualCorrectionModal = ({
                 name="employee_id"
                 value={formData.employee_id}
                 onChange={handleEmployeeChange}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem 0.875rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #CBD5E1',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  backgroundColor: '#FFFFFF',
-                  color: '#0F172A'
-                }}
+                className="form-select text-sm w-full"
               >
                 {MOCK_EMPLOYEE_LIST.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -270,45 +214,30 @@ export const ManualCorrectionModal = ({
           </div>
 
           {/* Date & Status Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
-                Date <span style={{ color: '#EF4444' }}>*</span>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Date <span className="text-rose-500">*</span>
               </label>
               <input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  border: `1px solid ${errors.date ? '#EF4444' : '#CBD5E1'}`,
-                  fontSize: '0.875rem',
-                  outline: 'none'
-                }}
+                className={`form-input text-sm w-full ${errors.date ? 'border-rose-500' : ''}`}
               />
-              {errors.date && <span style={{ fontSize: '0.75rem', color: '#DC2626', marginTop: '0.25rem', display: 'block' }}>{errors.date}</span>}
+              {errors.date && <span className="text-xs text-rose-600 mt-1 block font-medium">{errors.date}</span>}
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
-                Status <span style={{ color: '#EF4444' }}>*</span>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Status <span className="text-rose-500">*</span>
               </label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #CBD5E1',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  backgroundColor: '#FFFFFF'
-                }}
+                className="form-select text-sm w-full"
               >
                 <option value="Present">Present</option>
                 <option value="Late">Late</option>
@@ -320,9 +249,9 @@ export const ManualCorrectionModal = ({
 
           {/* Check In & Check Out Row (disabled if status is Absent) */}
           {formData.status !== 'Absent' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Check In Time
                 </label>
                 <input
@@ -330,19 +259,12 @@ export const ManualCorrectionModal = ({
                   name="check_in"
                   value={formData.check_in}
                   onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #CBD5E1',
-                    fontSize: '0.875rem',
-                    outline: 'none'
-                  }}
+                  className="form-input text-sm w-full font-mono"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Check Out Time
                 </label>
                 <input
@@ -350,23 +272,16 @@ export const ManualCorrectionModal = ({
                   name="check_out"
                   value={formData.check_out}
                   onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    border: `1px solid ${errors.check_out ? '#EF4444' : '#CBD5E1'}`,
-                    fontSize: '0.875rem',
-                    outline: 'none'
-                  }}
+                  className={`form-input text-sm w-full font-mono ${errors.check_out ? 'border-rose-500' : ''}`}
                 />
-                {errors.check_out && <span style={{ fontSize: '0.75rem', color: '#DC2626', marginTop: '0.25rem', display: 'block' }}>{errors.check_out}</span>}
+                {errors.check_out && <span className="text-xs text-rose-600 mt-1 block font-medium">{errors.check_out}</span>}
               </div>
             </div>
           )}
 
           {/* Overtime */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Overtime Hours
             </label>
             <input
@@ -378,21 +293,14 @@ export const ManualCorrectionModal = ({
               value={formData.overtime_hours}
               onChange={handleChange}
               placeholder="0.00"
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #CBD5E1',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
+              className="form-input text-sm w-full"
             />
           </div>
 
           {/* Correction Reason */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }}>
-              Correction Reason / Audit Notes {isEdit && <span style={{ color: '#EF4444' }}>*</span>}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Correction Reason / Audit Notes {isEdit && <span className="text-rose-500">*</span>}
             </label>
             <textarea
               name="correction_reason"
@@ -400,59 +308,29 @@ export const ManualCorrectionModal = ({
               value={formData.correction_reason}
               onChange={handleChange}
               placeholder="Provide reason for manual attendance correction or creation..."
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '0.5rem',
-                border: `1px solid ${errors.correction_reason ? '#EF4444' : '#CBD5E1'}`,
-                fontSize: '0.875rem',
-                outline: 'none',
-                resize: 'vertical'
-              }}
+              className={`form-textarea text-sm w-full ${errors.correction_reason ? 'border-rose-500' : ''}`}
             />
             {errors.correction_reason && (
-              <span style={{ fontSize: '0.75rem', color: '#DC2626', marginTop: '0.25rem', display: 'block' }}>
+              <span className="text-xs text-rose-600 mt-1 block font-medium">
                 {errors.correction_reason}
               </span>
             )}
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid #E2E8F0' }}>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #CBD5E1',
-                backgroundColor: '#FFFFFF',
-                color: '#475569',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
+              className="btn-secondary text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: '0.5rem 1.25rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.375rem',
-                opacity: loading ? 0.7 : 1
-              }}
+              className="btn-primary text-sm"
             >
               {loading ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Record'}
             </button>

@@ -186,18 +186,18 @@ export default function RequestTimeOffModal({
 
         {/* Dynamic Allocation Balance Card */}
         {allocationInfo && (
-          <div className="p-3.5 rounded-xl bg-slate-900/90 border border-white/10 space-y-2">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                <Info size={14} className="text-sky-400" />
-                Allocation Status: <span className="text-sky-400">{allocationInfo.allocation_name}</span>
+              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                <Info size={14} className="text-blue-600" />
+                Allocation Status: <span className="text-blue-700">{allocationInfo.allocation_name}</span>
               </span>
               {allocationInfo.is_paid ? (
-                <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   Paid Allocation
                 </span>
               ) : (
-                <span className="text-[11px] text-slate-400 font-bold bg-slate-500/10 px-2 py-0.5 rounded border border-slate-500/20">
+                <span className="text-[11px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                   Unpaid (No Balance Consumed)
                 </span>
               )}
@@ -205,21 +205,21 @@ export default function RequestTimeOffModal({
 
             {allocationInfo.is_paid ? (
               <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-                <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Allocated</span>
-                  <span className="font-bold text-slate-100 text-sm">{allocationInfo.allocated} Days</span>
+                <div className="p-2 rounded-lg bg-white border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Allocated</span>
+                  <span className="font-bold text-slate-900 text-sm">{allocationInfo.allocated} Days</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Used</span>
-                  <span className="font-bold text-amber-400 text-sm">{allocationInfo.used} Days</span>
+                <div className="p-2 rounded-lg bg-white border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Used</span>
+                  <span className="font-bold text-amber-600 text-sm">{allocationInfo.used} Days</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Remaining</span>
-                  <span className="font-extrabold text-emerald-400 text-sm">{allocationInfo.remaining} Days</span>
+                <div className="p-2 rounded-lg bg-white border border-slate-200">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Remaining</span>
+                  <span className="font-bold text-emerald-700 text-sm">{allocationInfo.remaining} Days</span>
                 </div>
               </div>
             ) : (
-              <p className="text-[11px] text-slate-400 italic pt-0.5">
+              <p className="text-[11px] text-slate-500 italic pt-0.5">
                 This type of leave does not consume any paid leave allocation balance.
               </p>
             )}
@@ -230,7 +230,7 @@ export default function RequestTimeOffModal({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
           <div>
             <label className="form-label text-xs">
-              Start Date <span className="text-rose-400">*</span>
+              Start Date <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
               <input
@@ -241,12 +241,12 @@ export default function RequestTimeOffModal({
                 disabled={submitting}
               />
             </div>
-            {errors.startDate && <p className="text-[11px] text-rose-400 mt-1">{errors.startDate}</p>}
+            {errors.startDate && <p className="text-[11px] text-rose-600 mt-1">{errors.startDate}</p>}
           </div>
 
           <div>
             <label className="form-label text-xs">
-              End Date <span className="text-rose-400">*</span>
+              End Date <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
               <input
@@ -257,17 +257,17 @@ export default function RequestTimeOffModal({
                 disabled={submitting}
               />
             </div>
-            {errors.endDate && <p className="text-[11px] text-rose-400 mt-1">{errors.endDate}</p>}
+            {errors.endDate && <p className="text-[11px] text-rose-600 mt-1">{errors.endDate}</p>}
           </div>
 
           <div>
             <label className="form-label text-xs">Calculated Duration</label>
-            <div className="h-[38px] px-3.5 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-between text-xs font-bold text-slate-100">
-              <span className="flex items-center gap-1.5 text-slate-400 font-normal">
-                <Clock size={13} className="text-sky-400" />
+            <div className="h-[38px] px-3.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-bold text-slate-900">
+              <span className="flex items-center gap-1.5 text-slate-500 font-normal">
+                <Clock size={13} className="text-blue-600" />
                 Duration:
               </span>
-              <span className="text-sky-400 text-sm">
+              <span className="text-blue-700 text-sm font-bold">
                 {calculatedDays} {calculatedDays === 1 ? 'Day' : 'Days'}
               </span>
             </div>
@@ -277,7 +277,7 @@ export default function RequestTimeOffModal({
         {/* Row 3: Reason */}
         <div>
           <label className="form-label text-xs">
-            Reason for Time Off <span className="text-rose-400">*</span>
+            Reason for Time Off <span className="text-rose-600">*</span>
           </label>
           <textarea
             rows={3}
@@ -290,11 +290,11 @@ export default function RequestTimeOffModal({
             className={`form-textarea text-xs ${errors.reason ? 'border-rose-500' : ''}`}
             disabled={submitting}
           />
-          {errors.reason && <p className="text-[11px] text-rose-400 mt-1">{errors.reason}</p>}
+          {errors.reason && <p className="text-[11px] text-rose-600 mt-1">{errors.reason}</p>}
         </div>
 
         {/* Actions Footer */}
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
           <button
             type="button"
             onClick={onClose}

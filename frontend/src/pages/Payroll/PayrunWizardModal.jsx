@@ -1,47 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { salaryAPI, payrunAPI } from '../../services/api';
+import { payrunAPI, salaryAPI } from '../../services/api';
 import { Modal } from '../../components/common/CommonUI';
 import { useNotify } from '../../context/NotificationContext';
-import { ArrowRight, ArrowLeft, Users, Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
   const { showToast } = useNotify();
 
   const [step, setStep] = useState(1);
   const [structures, setStructures] = useState([]);
-
-  // Step 1 Form Data
-  const [name, setName] = useState('Regular Payrun - August 2026');
+  const [name, setName] = useState('');
   const [periodMonth, setPeriodMonth] = useState('2026-08');
   const [startDate, setStartDate] = useState('2026-08-01');
   const [endDate, setEndDate] = useState('2026-08-31');
   const [structureId, setStructureId] = useState('');
 
-  // Step 2 Data
+  // Step 2 state
   const [eligibleEmployees, setEligibleEmployees] = useState([]);
   const [selectedEmpIds, setSelectedEmpIds] = useState([]);
   const [loadingEligible, setLoadingEligible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    salaryAPI.getStructures().then((res) => {
-      setStructures(res.data || []);
-      if (res.data?.[0]) setStructureId(res.data[0].id);
-    });
-  }, []);
+    if (isOpen) {
+      salaryAPI.getStructures().then((res) => {
+        const list = res.data || [];
+        setStructures(list);
+        if (list.length > 0 && !structureId) {
+          setStructureId(list[0].id);
+        }
+      });
+      // Set default name with current period
+      setName(`Regular Payroll - ${periodMonth}`);
+    }
+  }, [isOpen]);
 
-  const handlePeriodChange = (monthStr) => {
-    setPeriodMonth(monthStr);
-    setName(`Regular Payrun - ${monthStr}`);
-    const [y, m] = monthStr.split('-').map(Number);
-    const lastDay = new Date(y, m, 0).getDate();
-    setStartDate(`${monthStr}-01`);
-    setEndDate(`${monthStr}-${String(lastDay).padStart(2, '0')}`);
+  const handlePeriodChange = (val) => {
+    setPeriodMonth(val);
+    if (val && val.length === 7) {
+      const [year, month] = val.split('-');
+      const lastDay = new Date(Number(year), Number(month), 0).getDate();
+      setStartDate(`${val}-01`);
+      setEndDate(`${val}-${lastDay < 10 ? '0' + lastDay : lastDay}`);
+      setName(`Regular Payroll - ${val}`);
+    }
   };
 
   const handleProceedToStep2 = async () => {
-    if (!periodMonth || !startDate || !endDate || !structureId) {
-      showToast('Please complete all period parameters in Step 1', 'error');
+    if (!name || !periodMonth || !startDate || !endDate || !structureId) {
+      showToast('Please fill all required payroll parameters', 'error');
       return;
     }
 
@@ -52,23 +59,16 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
         start_date: startDate,
         end_date: endDate
       });
-      const emps = res.data || [];
-      setEligibleEmployees(emps);
-      // Pre-select all eligible employees by default
-      setSelectedEmpIds(emps.map((e) => e.employee_id));
+
+      const list = res.data || [];
+      setEligibleEmployees(list);
+      // Auto-select all eligible employees by default
+      setSelectedEmpIds(list.map((e) => e.employee_id));
       setStep(2);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
       setLoadingEligible(false);
-    }
-  };
-
-  const toggleSelectEmployee = (empId) => {
-    if (selectedEmpIds.includes(empId)) {
-      setSelectedEmpIds(selectedEmpIds.filter((id) => id !== empId));
-    } else {
-      setSelectedEmpIds([...selectedEmpIds, empId]);
     }
   };
 
@@ -80,9 +80,17 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const toggleSelectEmployee = (empId) => {
+    if (selectedEmpIds.includes(empId)) {
+      setSelectedEmpIds(selectedEmpIds.filter((id) => id !== empId));
+    } else {
+      setSelectedEmpIds([...selectedEmpIds, empId]);
+    }
+  };
+
   const handleCreatePayrun = async () => {
     if (selectedEmpIds.length === 0) {
-      showToast('Please select at least one employee to include in payrun', 'error');
+      showToast('Select at least one employee for the payrun', 'error');
       return;
     }
 
@@ -94,9 +102,10 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
         start_date: startDate,
         end_date: endDate,
         salary_structure_id: structureId,
-        selected_employee_ids: selectedEmpIds
+        employee_ids: selectedEmpIds
       });
-      showToast(res.message, 'success');
+
+      showToast('Payrun initialized successfully in DRAFT status', 'success');
       onSuccess(res.payrun_id);
       onClose();
       // Reset wizard
@@ -140,7 +149,7 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
               <input
                 type="month"
                 required
-                className="form-input font-bold text-sky-400"
+                className="form-input font-bold text-blue-700"
                 value={periodMonth}
                 onChange={(e) => handlePeriodChange(e.target.value)}
               />
@@ -178,12 +187,12 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
                 <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
               ))}
             </select>
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               The engine will match active historical contracts for employees using this structure.
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button type="button" onClick={onClose} className="btn-secondary">
               Cancel
             </button>
@@ -201,21 +210,21 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
       ) : (
         /* STEP 2 */
         <div className="space-y-4 text-xs">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-white/10">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                className="text-xs text-sky-400 hover:text-sky-300 font-bold"
+                className="text-xs text-blue-700 hover:text-blue-800 font-semibold"
               >
                 {selectedEmpIds.length === eligibleEmployees.length ? 'Deselect All' : 'Select All'}
               </button>
-              <span className="text-slate-500">•</span>
-              <span className="text-slate-300 font-medium">
-                Period: <strong className="text-white">{periodMonth}</strong>
+              <span className="text-slate-400">•</span>
+              <span className="text-slate-600 font-medium">
+                Period: <strong className="text-slate-900">{periodMonth}</strong>
               </span>
             </div>
-            <span className="font-bold text-sky-400">
+            <span className="font-bold text-blue-700">
               {selectedEmpIds.length} Employees Included
             </span>
           </div>
@@ -232,16 +241,16 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
                   onClick={() => toggleSelectEmployee(emp.employee_id)}
                   className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-sky-950/40 border-sky-500/50 shadow-sm'
-                      : 'bg-white/5 border-white/5 opacity-60 hover:opacity-100'
+                      ? 'bg-blue-50/70 border-blue-300 shadow-xs'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${
                         isSelected
-                          ? 'bg-sky-600 border-sky-500 text-white'
-                          : 'border-slate-600 bg-slate-900'
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : 'border-slate-300 bg-white'
                       }`}
                     >
                       {isSelected && <Check size={13} />}
@@ -249,25 +258,25 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-100 text-sm">
+                        <span className="font-bold text-slate-900 text-sm">
                           {emp.first_name} {emp.last_name}
                         </span>
-                        <span className="text-[10px] text-sky-400 font-mono">({emp.emp_code})</span>
+                        <span className="text-[11px] text-blue-600 font-mono font-semibold">({emp.emp_code})</span>
                         {hasBankIssue && (
-                          <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-500/30">
+                          <span className="text-[10px] text-amber-700 font-bold flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                             <AlertCircle size={10} />
                             No Bank
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-500">
                         {emp.job_title} • {emp.department_name}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="font-extrabold text-slate-100 text-sm">
+                    <span className="font-bold text-slate-900 text-sm">
                       ₹{Number(emp.wage).toLocaleString()}
                     </span>
                     <span className="text-[10px] text-slate-400 block font-mono">
@@ -279,7 +288,7 @@ export function PayrunWizardModal({ isOpen, onClose, onSuccess }) {
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setStep(1)}

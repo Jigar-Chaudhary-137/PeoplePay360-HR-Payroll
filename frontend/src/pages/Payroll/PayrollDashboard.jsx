@@ -3,196 +3,143 @@ import { Link } from 'react-router-dom';
 import {
   DollarSign, FileText, TrendingUp, Calendar, CheckCircle2,
   AlertTriangle, Users, Building, ArrowUpRight, ShieldAlert,
-  Sparkles, Clock, UserCheck, Banknote, RefreshCw, AlertCircle,
-  Info, Zap
+  Sparkles, Clock, UserCheck, RefreshCw, AlertCircle,
+  Info, Zap, ArrowRight
 } from 'lucide-react';
 import { dashboardAPI } from '../../services/api';
-import { StatCard, LoadingSpinner, EmptyState } from '../../components/common/CommonUI';
+import { StatCard, LoadingSpinner, ErrorState } from '../../components/common/CommonUI';
 
-// ── Inline mini bar chart ──────────────────────────────────────────────────
-function MiniBar({ value, max, color = 'sky' }) {
-  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
-  const colorClass = {
-    sky: 'bg-sky-500',
-    emerald: 'bg-emerald-500',
-    amber: 'bg-amber-500',
-    purple: 'bg-purple-500',
-    rose: 'bg-rose-500',
-  }[color] || 'bg-sky-500';
-  return (
-    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
-      <div className={`h-full rounded-full ${colorClass} transition-all duration-700`} style={{ width: `${pct}%` }} />
-    </div>
-  );
-}
-
-// ── Alert severity styling ─────────────────────────────────────────────────
-function alertStyle(severity) {
-  const s = (severity || '').toLowerCase();
-  if (s === 'warning' || s === 'high')
-    return { wrap: 'bg-amber-950/30 border-amber-500/30', icon: 'text-amber-400', text: 'text-amber-200', badge: 'bg-amber-500/20 text-amber-300' };
-  if (s === 'critical')
-    return { wrap: 'bg-rose-950/30 border-rose-500/30', icon: 'text-rose-400', text: 'text-rose-200', badge: 'bg-rose-500/20 text-rose-300' };
-  if (s === 'action')
-    return { wrap: 'bg-sky-950/30 border-sky-500/30', icon: 'text-sky-400', text: 'text-sky-200', badge: 'bg-sky-500/20 text-sky-300' };
-  return { wrap: 'bg-slate-800/60 border-white/10', icon: 'text-slate-400', text: 'text-slate-300', badge: 'bg-white/10 text-slate-400' };
-}
-
-function AlertIcon({ severity }) {
-  const s = (severity || '').toLowerCase();
-  if (s === 'critical') return <AlertCircle size={16} />;
-  if (s === 'action')   return <Zap size={16} />;
-  if (s === 'info')     return <Info size={16} />;
-  return <AlertTriangle size={16} />;
-}
-
-// ── Section header ─────────────────────────────────────────────────────────
-function SectionHeader({ title, subtitle, action }) {
-  return (
-    <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
-      <div>
-        <h3 className="font-bold text-slate-100 text-sm">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
-      </div>
-      {action}
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────
 export function PayrollDashboard() {
-  const [rawData, setRawData] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [selectedDept, setSelectedDept]     = useState('');
+  const [selectedDept, setSelectedDept] = useState('');
 
   const loadDashboard = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await dashboardAPI.getMetrics({
-        period_month:  selectedPeriod || undefined,
-        department_id: selectedDept   || undefined,
+        period_month: selectedPeriod || undefined,
+        department_id: selectedDept || undefined,
       });
-      // Backend wraps in { success, data } — unwrap if needed
-      setRawData(res?.data ?? res);
+      const payload = res?.data || res;
+      setData(payload);
     } catch (err) {
+      console.error('Dashboard load error:', err);
       setError(err.message || 'Failed to load dashboard data.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadDashboard(); }, [selectedPeriod, selectedDept]);
+  useEffect(() => {
+    loadDashboard();
+  }, [selectedPeriod, selectedDept]);
 
-  // ── Skeleton loader ──────────────────────────────────────────────────────
-  if (loading && !rawData) {
+  // Skeleton loader
+  if (loading && !data) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-slate-800 rounded-xl w-72" />
+        <div className="h-8 bg-slate-200 rounded-xl w-72" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="glass-card p-5 h-28" />
+            <div key={i} className="card p-5 h-28 bg-slate-100" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass-card p-5 h-64 lg:col-span-2" />
-          <div className="glass-card p-5 h-64" />
+          <div className="card p-5 h-64 lg:col-span-2 bg-slate-100" />
+          <div className="card p-5 h-64 bg-slate-100" />
         </div>
       </div>
     );
   }
 
-  // ── Error state ──────────────────────────────────────────────────────────
+  // Error state
   if (error) {
     return (
-      <div className="glass-card p-8 text-center space-y-4 border-rose-500/20">
-        <AlertCircle size={36} className="text-rose-400 mx-auto" />
-        <div>
-          <h3 className="font-bold text-slate-100">Unable to load payroll analytics</h3>
-          <p className="text-xs text-slate-400 mt-1">{error}</p>
-        </div>
-        <button onClick={loadDashboard} className="btn-primary mx-auto">
-          <RefreshCw size={14} />
-          <span>Retry</span>
-        </button>
-      </div>
+      <ErrorState
+        title="Unable to load payroll analytics"
+        message={error}
+        onRetry={loadDashboard}
+      />
     );
   }
 
-  // ── Normalise API data ────────────────────────────────────────────────────
-  // Backend shape: { kpis: { totalNetPaid, totalGrossPaid, payslipsGenerated,
-  //   averageSalary, approvedTimeOffDays, attendanceHealthPercent, activeEmployees },
-  //   departmentSalaries, monthlyTrends, alerts }
-  const kpis        = rawData?.kpis              || {};
-  const deptCosts   = rawData?.departmentSalaries || [];
-  const monthly     = rawData?.monthlyTrends      || [];
-  const alerts      = rawData?.alerts             || [];
+  const kpis = data?.kpis || {};
+  const deptCosts = data?.departmentSalaries || [];
+  const monthlyTrend = data?.monthlyTrends || [];
+  const anomalies = data?.alerts || [];
+  const totalDeptCostSum = deptCosts.reduce((acc, curr) => acc + Number(curr.total_cost || curr.total_net || 0), 0) || 1;
 
-  // Compute max for bar charts
-  const maxDeptCost  = Math.max(...deptCosts.map(d => Number(d.total_cost || 0)), 1);
-  const maxMonthNet  = Math.max(...monthly.map(m => Number(m.total_net || 0)), 1);
+  const currentPeriodName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="space-y-6">
-
-      {/* ── Page Header & Filters ─────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+    <div className="space-y-6 pb-6">
+      {/* Top Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
-            Payroll Dashboard
-            <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold uppercase tracking-wider">
-              Live
-            </span>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
+            Payroll Operations
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time payroll analytics, departmental distributions, and proactive anomaly surveillance
+          <p className="text-sm text-slate-500 mt-0.5">
+            Real-time payroll, attendance and workforce insights
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Period filter */}
-          <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-2 rounded-xl border border-white/10 text-xs">
-            <Calendar size={13} className="text-sky-400 shrink-0" />
-            <span className="text-slate-400">Period</span>
+        {/* Right side controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Period selector */}
+          <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
+            <Calendar size={13} className="text-blue-600 shrink-0" />
+            <span className="text-slate-400">Period:</span>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="bg-transparent text-slate-100 font-semibold outline-none cursor-pointer"
+              className="bg-transparent text-slate-800 font-bold outline-none cursor-pointer"
             >
-              <option value="" className="bg-slate-900">All Periods</option>
-              {(rawData?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p) => (
-                <option key={p} value={p} className="bg-slate-900">{p}</option>
+              <option value="">All Periods ({currentPeriodName})</option>
+              {(data?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p) => (
+                <option key={p} value={p}>{p}</option>
               ))}
             </select>
           </div>
 
-          <Link to="/payruns" className="btn-primary text-xs">
-            <DollarSign size={14} />
+          <button
+            onClick={loadDashboard}
+            className="btn-secondary text-xs px-3 py-2"
+            title="Refresh Ledger"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+
+          <Link to="/payruns" className="btn-primary text-xs px-3.5 py-2">
+            <DollarSign size={15} />
             <span>Process Payrun</span>
           </Link>
         </div>
       </div>
 
-      {/* ── 5 KPI Cards ───────────────────────────────────────────────────── */}
+      {/* 5 KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Net Payroll"
           value={`₹${Number(kpis.totalNetPaid || 0).toLocaleString('en-IN')}`}
           subtitle={`Gross: ₹${Number(kpis.totalGrossPaid || 0).toLocaleString('en-IN')}`}
-          icon={Banknote}
+          icon={DollarSign}
           color="sky"
         />
         <StatCard
-          title="Payslips Generated"
+          title="Payslips Issued"
           value={kpis.payslipsGenerated || 0}
           subtitle={`Active Staff: ${kpis.activeEmployees || 0}`}
           icon={FileText}
           color="emerald"
         />
         <StatCard
-          title="Avg Net Salary"
+          title="Average Net Salary"
           value={`₹${Number(kpis.averageSalary || 0).toLocaleString('en-IN')}`}
           subtitle="Per employee this period"
           icon={TrendingUp}
@@ -214,34 +161,42 @@ export function PayrollDashboard() {
         />
       </div>
 
-      {/* ── Alerts (only shown if present) ───────────────────────────────── */}
-      {alerts.length > 0 && (
-        <div className="glass-card p-5 border-amber-500/20 bg-amber-950/5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-              <ShieldAlert size={17} />
-              <span>Payroll Alerts &amp; Warnings <span className="text-amber-300">({alerts.length})</span></span>
+      {/* Alerts / Anomalies Section */}
+      {anomalies.length > 0 && (
+        <div className="card p-5 border-amber-200 bg-amber-50/40">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2 text-amber-900 font-bold text-sm font-heading">
+              <ShieldAlert size={18} className="text-amber-600" />
+              <span>Payroll Warnings & Anomalies ({anomalies.length} Flagged)</span>
             </div>
-            <Link to="/payruns" className="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
-              <span>View Payruns</span>
-              <ArrowUpRight size={12} />
+            <Link to="/payruns" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition-colors">
+              <span>Inspect in Payrun Console</span>
+              <ArrowUpRight size={13} />
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {alerts.map((a, i) => {
-              const s = alertStyle(a.severity);
+            {anomalies.map((a, idx) => {
+              const isWarning = a.severity === 'WARNING' || a.severity === 'critical' || a.severity === 'high';
               return (
-                <div key={i} className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${s.wrap}`}>
+                <div
+                  key={idx}
+                  className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${
+                    isWarning
+                      ? 'bg-white border-amber-200 text-slate-800 shadow-2xs'
+                      : 'bg-white border-blue-200 text-slate-800 shadow-2xs'
+                  }`}
+                >
                   <div className="flex items-center justify-between font-bold">
-                    <span className={`flex items-center gap-1.5 ${s.icon}`}>
-                      <AlertIcon severity={a.severity} />
-                      <span className="truncate">{a.title}</span>
-                    </span>
-                    <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded font-bold ${s.badge}`}>
+                    <span className="truncate text-slate-900 font-heading text-sm">{a.title}</span>
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                      isWarning
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}>
                       {a.severity}
                     </span>
                   </div>
-                  <p className={`${s.text} leading-relaxed`}>{a.message}</p>
+                  <p className="text-slate-600 text-xs leading-relaxed">{a.message || a.reason}</p>
                 </div>
               );
             })}
@@ -249,100 +204,179 @@ export function PayrollDashboard() {
         </div>
       )}
 
-      {/* ── Row 2: Department Costs + Monthly Trend ───────────────────────── */}
+      {/* Content Grid: 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left / Large: Salary Cost by Department */}
+        <div className="card p-5 lg:col-span-2 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
+                <Building size={17} className="text-blue-600" />
+                Salary Cost by Department
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">Aggregated payroll expenditure and average employee compensation</p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 self-start sm:self-auto">
+              Period: {selectedPeriod || currentPeriodName}
+            </span>
+          </div>
 
-        {/* Department Salary Cost */}
-        <div className="glass-card p-5 lg:col-span-2 space-y-4">
-          <SectionHeader
-            title="Salary Cost by Department"
-            subtitle="Aggregated payroll expenditure and head count"
-            action={<span className="text-xs text-slate-500 font-medium">Period: {selectedPeriod || 'All'}</span>}
-          />
-          {deptCosts.length === 0 ? (
-            <p className="text-xs text-slate-500 italic text-center py-6">No department payroll data for this period.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="custom-table">
-                <thead>
+          <div className="custom-table-container">
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>Department</th>
+                  <th className="text-center">Employees</th>
+                  <th>Total Gross</th>
+                  <th>Total Net Salary</th>
+                  <th>Avg Net</th>
+                  <th className="w-24 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deptCosts.length === 0 ? (
                   <tr>
-                    <th>Department</th>
-                    <th>Staff</th>
-                    <th>Total Net</th>
-                    <th className="w-32">Distribution</th>
+                    <td colSpan={6} className="text-center py-8 text-slate-400 text-sm">
+                      No departmental payroll data available.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {deptCosts.map((d) => (
-                    <tr key={d.id || d.code}>
-                      <td>
-                        <span className="font-semibold text-slate-100">{d.name || d.department_name}</span>
-                        {d.code && <span className="text-[10px] text-slate-500 ml-1.5">({d.code})</span>}
-                      </td>
-                      <td className="font-bold text-slate-200">{d.employee_count}</td>
-                      <td className="text-sky-400 font-bold">₹{Number(d.total_cost || d.total_net || 0).toLocaleString('en-IN')}</td>
-                      <td>
-                        <MiniBar value={Number(d.total_cost || d.total_net || 0)} max={maxDeptCost} color="sky" />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ) : (
+                  deptCosts.map((d) => {
+                    const netCost = Number(d.total_cost || d.total_net || 0);
+                    const grossCost = Number(d.total_gross || 0);
+                    const sharePct = Math.round((netCost / totalDeptCostSum) * 100) || 0;
+                    const avgNet = d.employee_count > 0 ? Math.round(netCost / d.employee_count) : 0;
+                    return (
+                      <tr key={d.id || d.code || d.department_name || d.name}>
+                        <td>
+                          <div className="font-bold text-slate-900 text-sm font-heading">
+                            {d.department_name || d.name}
+                          </div>
+                          {d.code && <span className="text-[11px] text-blue-600 font-semibold">Code: {d.code}</span>}
+                        </td>
+                        <td className="text-center">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
+                            {d.employee_count}
+                          </span>
+                        </td>
+                        <td className="text-slate-600 text-sm font-medium">{grossCost > 0 ? `₹${grossCost.toLocaleString('en-IN')}` : '—'}</td>
+                        <td className="text-slate-900 font-bold text-sm">₹{netCost.toLocaleString('en-IN')}</td>
+                        <td className="text-slate-600 text-sm font-medium">₹{avgNet.toLocaleString('en-IN')}</td>
+                        <td className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-xs font-bold text-slate-600">{sharePct}%</span>
+                            <div className="w-12 bg-slate-100 h-2 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                              <div
+                                className="bg-blue-600 h-full rounded-full"
+                                style={{ width: `${sharePct}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Monthly Net Salary Trend */}
-        <div className="glass-card p-5 space-y-4">
-          <SectionHeader
-            title="Monthly Payroll Trend"
-            subtitle="Historical payrun disbursement"
-          />
-          {monthly.length === 0 ? (
-            <p className="text-xs text-slate-500 italic text-center py-6">No payrun history available.</p>
-          ) : (
-            <div className="space-y-3">
-              {monthly.map((m) => (
-                <div key={m.id || m.period_start} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-300">
-                      {m.period_start ? m.period_start.split('T')[0].slice(0, 7) : m.name}
-                    </span>
-                    <span className="text-sky-400 font-bold">₹{Number(m.total_net || 0).toLocaleString('en-IN')}</span>
-                  </div>
-                  <MiniBar value={Number(m.total_net || 0)} max={maxMonthNet} color="sky" />
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Gross: ₹{Number(m.total_gross || 0).toLocaleString('en-IN')}</span>
-                    <span className="capitalize">{m.status}</span>
-                  </div>
+        {/* Right: Monthly Payroll Trend */}
+        <div className="card p-5 space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
+              <TrendingUp size={17} className="text-blue-600" />
+              Monthly Payroll Trend
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">Historical payrun disbursement comparison</p>
+          </div>
+
+          <div className="space-y-3">
+            {monthlyTrend.length === 0 ? (
+              <div className="text-center py-10 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                  <TrendingUp size={18} />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                <p className="text-sm font-bold text-slate-700 font-heading">No payroll history yet</p>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                  Process your first payrun to see monthly trends.
+                </p>
+                <Link to="/payruns" className="btn-primary text-xs mt-3 px-3 py-1.5 inline-flex">
+                  Process Payrun
+                </Link>
+              </div>
+            ) : (
+              monthlyTrend.map((m) => {
+                const net = Number(m.total_net || 0);
+                const gross = Number(m.total_gross || 0);
+                const label = m.name || m.period_start?.slice(0, 7) || `Run #${m.id}`;
+                return (
+                  <div key={m.id || label} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 transition-all space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 text-xs tracking-tight font-heading">{label}</span>
+                      <span className="text-blue-600 font-extrabold text-sm">₹{net.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (net / (kpis.totalNetPaid || net || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500 font-medium pt-0.5">
+                      <span>Gross: ₹{gross.toLocaleString('en-IN')}</span>
+                      <span className="text-slate-700 font-semibold capitalize">{m.status}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
 
-      {/* ── Row 3: Attendance Health + Quick Links ────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Navigation links */}
+          <div className="pt-3 border-t border-slate-100">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 font-heading">Quick Actions</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Link to="/employees" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+                <span>Staff Directory</span>
+                <ArrowRight size={12} className="text-slate-400" />
+              </Link>
+              <Link to="/attendance" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+                <span>Attendance</span>
+                <ArrowRight size={12} className="text-slate-400" />
+              </Link>
+              <Link to="/time-off" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+                <span>Time Off</span>
+                <ArrowRight size={12} className="text-slate-400" />
+              </Link>
+              <Link to="/payslips" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+                <span>Payslips Ledger</span>
+                <ArrowRight size={12} className="text-slate-400" />
+              </Link>
+            </div>
+          </div>
+        </div>
 
         {/* Attendance Breakdown */}
-        <div className="glass-card p-5 space-y-4">
-          <SectionHeader
-            title="Attendance Health"
-            subtitle="Overall punch accuracy"
-          />
+        <div className="card p-5 space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
+              <CheckCircle2 size={17} className="text-emerald-600" />
+              Attendance Health
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">Overall punch and punctuality rate</p>
+          </div>
           <div className="flex items-center justify-center py-4">
             <div className="relative w-32 h-32">
-              {/* Simple donut via conic-gradient */}
               <div
                 className="w-32 h-32 rounded-full"
                 style={{
-                  background: `conic-gradient(#10b981 0% ${kpis.attendanceHealthPercent ?? 96}%, rgba(255,255,255,0.05) ${kpis.attendanceHealthPercent ?? 96}% 100%)`
+                  background: `conic-gradient(#10b981 0% ${kpis.attendanceHealthPercent ?? 96}%, #f1f5f9 ${kpis.attendanceHealthPercent ?? 96}% 100%)`
                 }}
               />
-              <div className="absolute inset-3 rounded-full bg-slate-900/95 flex items-center justify-center flex-col">
-                <span className="text-2xl font-black text-emerald-400">{kpis.attendanceHealthPercent ?? 96}%</span>
-                <span className="text-[10px] text-slate-400 font-medium">Health</span>
+              <div className="absolute inset-3 rounded-full bg-white flex items-center justify-center flex-col shadow-xs border border-slate-100">
+                <span className="text-2xl font-black text-emerald-600 font-heading">{kpis.attendanceHealthPercent ?? 96}%</span>
+                <span className="text-[10px] text-slate-500 font-medium">Health</span>
               </div>
             </div>
           </div>
@@ -353,59 +387,61 @@ export function PayrollDashboard() {
               { label: 'Absent', color: 'bg-rose-500', pct: 2 },
             ].map((row) => (
               <div key={row.label} className="flex items-center gap-3 text-xs">
-                <span className={`w-2 h-2 rounded-full ${row.color} shrink-0`} />
-                <span className="text-slate-400 flex-1">{row.label}</span>
-                <span className="text-slate-200 font-semibold">{row.pct}%</span>
+                <span className={`w-2.5 h-2.5 rounded-full ${row.color} shrink-0`} />
+                <span className="text-slate-600 flex-1">{row.label}</span>
+                <span className="text-slate-900 font-bold">{row.pct}%</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Quick Actions / Module overview */}
-        <div className="glass-card p-5 space-y-4 lg:col-span-2">
-          <SectionHeader
-            title="Payroll Intelligence"
-            subtitle="Active data sources being aggregated for this dashboard"
-          />
+        {/* Payroll Intelligence Quick Launcher */}
+        <div className="card p-5 space-y-4 lg:col-span-2">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
+              <Sparkles size={17} className="text-blue-600" />
+              Payroll Intelligence
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">Active data sources and enterprise modules</p>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: 'Employees', icon: Users, to: '/employees', color: 'text-sky-400', bg: 'bg-sky-500/10' },
-              { label: 'Contracts', icon: FileText, to: '/contracts', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { label: 'Attendance', icon: Clock, to: '/attendance', color: 'text-amber-400', bg: 'bg-amber-500/10' },
-              { label: 'Time Off', icon: Calendar, to: '/time-off', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-              { label: 'Payruns', icon: DollarSign, to: '/payruns', color: 'text-sky-400', bg: 'bg-sky-500/10' },
-              { label: 'Payslips', icon: UserCheck, to: '/payslips', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { label: 'Salary Config', icon: Sparkles, to: '/salary-config', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-              { label: 'Anomaly Engine', icon: ShieldAlert, to: '/payruns', color: 'text-rose-400', bg: 'bg-rose-500/10' },
-              { label: 'AI Assistant', icon: Zap, to: null, color: 'text-sky-300', bg: 'bg-sky-500/10', onClick: true },
+              { label: 'Employees', icon: Users, to: '/employees', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
+              { label: 'Contracts', icon: FileText, to: '/contracts', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
+              { label: 'Attendance', icon: Clock, to: '/attendance', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' },
+              { label: 'Time Off', icon: Calendar, to: '/time-off', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-100' },
+              { label: 'Payruns', icon: DollarSign, to: '/payruns', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
+              { label: 'Payslips', icon: UserCheck, to: '/payslips', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
+              { label: 'Salary Config', icon: Sparkles, to: '/salary-config', color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
+              { label: 'Anomaly Engine', icon: ShieldAlert, to: '/payruns', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100' },
+              { label: 'AI Assistant', icon: Zap, to: null, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
             ].map((item) => (
               item.to ? (
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group text-center"
+                  className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 transition-all group text-center shadow-2xs"
                 >
-                  <div className={`p-2.5 rounded-xl ${item.bg} ${item.color}`}>
+                  <div className={`p-2.5 rounded-xl border ${item.bg} ${item.color} group-hover:scale-105 transition-transform`}>
                     <item.icon size={18} />
                   </div>
-                  <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors font-medium">{item.label}</span>
+                  <span className="text-xs text-slate-700 group-hover:text-blue-600 transition-colors font-semibold">{item.label}</span>
                 </Link>
               ) : (
                 <div
                   key={item.label}
-                  className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group text-center cursor-default"
+                  className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50/50 transition-all text-center shadow-2xs cursor-default"
                 >
-                  <div className={`p-2.5 rounded-xl ${item.bg} ${item.color}`}>
+                  <div className={`p-2.5 rounded-xl border ${item.bg} ${item.color}`}>
                     <item.icon size={18} />
                   </div>
-                  <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors font-medium">{item.label}</span>
+                  <span className="text-xs text-slate-600 font-semibold">{item.label}</span>
                 </div>
               )
             ))}
           </div>
         </div>
       </div>
-
     </div>
   );
 }

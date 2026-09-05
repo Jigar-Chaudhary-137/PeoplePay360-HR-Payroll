@@ -35,31 +35,33 @@ export function PayslipList() {
   }, [periodFilter, statusFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
-            Payslips Ledger
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
+              Payslips Ledger
+            </h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
               {payslips.length} Payslips
             </span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          </div>
+          <p className="text-sm text-slate-500 mt-0.5">
             Historical salary calculation ledger, PDF generator, and electronic delivery
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
           <input
             type="month"
-            className="form-input text-xs w-40"
+            className="form-input text-xs py-2 px-2.5 w-36"
             value={periodFilter}
             onChange={(e) => setPeriodFilter(e.target.value)}
           />
 
           <select
-            className="form-select text-xs w-36"
+            className="form-select text-xs py-2 w-36"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -81,69 +83,71 @@ export function PayslipList() {
           description="Processed payslips from payruns will appear here."
         />
       ) : (
-        <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>Payslip Code</th>
-                  <th>Employee</th>
-                  <th>Period</th>
-                  <th>Worked Days</th>
-                  <th>Gross Salary</th>
-                  <th>Deductions</th>
-                  <th>Net Payable</th>
-                  <th>Status</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payslips.map((ps) => (
-                  <tr key={ps.id}>
-                    <td className="font-mono font-bold text-sky-400">{ps.payslip_code}</td>
-                    <td>
-                      <Link
-                        to={`/employees/${ps.employee_id}`}
-                        className="font-bold text-slate-100 hover:text-sky-400 transition-colors block text-sm"
-                      >
-                        {ps.first_name} {ps.last_name}
+        <div className="custom-table-container">
+          <table className="custom-table">
+            <thead>
+              <tr>
+                <th>Payslip Code</th>
+                <th>Employee</th>
+                <th>Period</th>
+                <th>Worked Days</th>
+                <th>Gross Salary</th>
+                <th>Deductions</th>
+                <th>Net Payable</th>
+                <th>Status</th>
+                <th className="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payslips.map((ps) => (
+                <tr key={ps.id}>
+                  <td>
+                    <span className="font-bold text-blue-600 text-sm">{ps.payslip_code || `PS-${ps.id}`}</span>
+                  </td>
+                  <td>
+                    <Link
+                      to={`/employees/${ps.employee_id}`}
+                      className="font-bold text-slate-900 hover:text-blue-600 transition-colors block text-sm font-heading"
+                    >
+                      {ps.first_name} {ps.last_name}
+                    </Link>
+                    <span className="text-xs text-slate-400">
+                      {ps.emp_code} <span className="text-slate-300">•</span> {ps.department_name}
+                    </span>
+                  </td>
+                  <td className="text-slate-700 font-semibold text-sm">{ps.period_month || ps.period_start?.slice(0, 7)}</td>
+                  <td className="text-xs text-slate-600">
+                    <span className="font-semibold text-slate-900">{ps.worked_days}</span> / {ps.total_days || ps.scheduled_days || 22} days
+                  </td>
+                  <td className="text-slate-600 text-sm font-medium">₹{Number(ps.gross_salary).toLocaleString('en-IN')}</td>
+                  <td className="text-rose-600 text-sm font-medium">₹{Number(ps.total_deductions).toLocaleString('en-IN')}</td>
+                  <td>
+                    <span className="font-extrabold text-emerald-600 text-sm">
+                      ₹{Number(ps.net_salary).toLocaleString('en-IN')}
+                    </span>
+                  </td>
+                  <td><Badge status={ps.status} /></td>
+                  <td className="text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Link to={`/payslips/${ps.id}`} className="btn-secondary text-xs py-1.5 px-3">
+                        <Eye size={13} />
+                        <span>Inspect</span>
                       </Link>
-                      <span className="text-[11px] text-slate-400">{ps.emp_code} • {ps.department_name}</span>
-                    </td>
-                    <td className="text-slate-200 font-semibold text-xs">{ps.period_month}</td>
-                    <td className="text-xs text-slate-300">
-                      {ps.worked_days} / {ps.total_days}d
-                    </td>
-                    <td className="text-slate-300 text-xs">₹{Number(ps.gross_salary).toLocaleString()}</td>
-                    <td className="text-rose-400 text-xs">₹{Number(ps.total_deductions).toLocaleString()}</td>
-                    <td>
-                      <span className="font-black text-emerald-400 text-base">
-                        ₹{Number(ps.net_salary).toLocaleString()}
-                      </span>
-                    </td>
-                    <td><Badge status={ps.status} /></td>
-                    <td className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link to={`/payslips/${ps.id}`} className="btn-secondary text-xs py-1 px-2.5">
-                          <Eye size={13} />
-                          <span>Inspect</span>
-                        </Link>
-                        <a
-                          href={payslipAPI.getPDFUrl(ps.id)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-primary text-xs py-1 px-2.5"
-                        >
-                          <Download size={13} />
-                          <span>PDF</span>
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <a
+                        href={payslipAPI.getPDFUrl(ps.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-primary text-xs py-1.5 px-3"
+                      >
+                        <Download size={13} />
+                        <span>PDF</span>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -43,29 +43,29 @@ export function EmployeeDetail() {
   const payslips = employee.payslips || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Back button */}
-      <Link to="/employees" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+      <Link to="/employees" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold transition-colors">
         <ArrowLeft size={14} />
         <span>Back to Employees</span>
       </Link>
 
       {/* Profile Header Card */}
-      <div className="glass-card p-6 relative overflow-hidden">
+      <div className="card p-6 relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-xl shadow-sky-500/20 shrink-0">
-              {employee.first_name[0]}{employee.last_name[0]}
+            <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white font-extrabold text-xl flex items-center justify-center shadow-xs shrink-0 font-heading">
+              {employee.first_name?.[0]}{employee.last_name?.[0]}
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-black text-slate-100">
+                <h1 className="text-2xl font-bold text-slate-900 font-heading">
                   {employee.first_name} {employee.last_name}
                 </h1>
                 <Badge status={employee.employment_status} />
               </div>
-              <p className="text-xs text-slate-400 mt-1 flex items-center gap-4 flex-wrap">
-                <span className="text-sky-400 font-bold">{employee.emp_code}</span>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap font-medium">
+                <span className="text-blue-600 font-bold">{employee.emp_code}</span>
                 <span>•</span>
                 <span>{employee.job_title || 'Designation Pending'}</span>
                 <span>•</span>
@@ -74,14 +74,14 @@ export function EmployeeDetail() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
+          <div className="flex items-center gap-6 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
             <div>
-              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">System Role</p>
-              <p className="text-sm font-bold text-slate-200 mt-0.5">{employee.user_role || 'Employee'}</p>
+              <p className="text-[11px] uppercase font-bold text-slate-400 tracking-wider font-heading">System Role</p>
+              <p className="text-sm font-bold text-slate-800 mt-0.5">{employee.user_role || 'Employee'}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Joining Date</p>
-              <p className="text-sm font-bold text-slate-200 mt-0.5">
+              <p className="text-[11px] uppercase font-bold text-slate-400 tracking-wider font-heading">Joining Date</p>
+              <p className="text-sm font-bold text-slate-800 mt-0.5">
                 {employee.joining_date ? employee.joining_date.split('T')[0] : 'N/A'}
               </p>
             </div>
@@ -89,26 +89,27 @@ export function EmployeeDetail() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-t border-white/10 mt-6 pt-4 overflow-x-auto text-xs font-semibold">
+        <div className="flex gap-1.5 border-t border-slate-100 mt-6 pt-4 overflow-x-auto text-xs font-semibold">
           {[
             { id: 'contracts', label: `Contracts (${contracts.length})`, icon: DollarSign },
             { id: 'attendance', label: `Attendance (${attendance.length})`, icon: Clock },
-            { id: 'leaves', label: `Time Off & Balances (${leaves.length})`, icon: CalendarOff },
-            { id: 'payslips', label: `Payslips Ledger (${payslips.length})`, icon: FileText },
+            { id: 'leaves', label: `Time Off (${leaves.length})`, icon: CalendarOff },
+            { id: 'payslips', label: `Payslips (${payslips.length})`, icon: FileText },
             { id: 'profile', label: 'Master & Banking', icon: CreditCard }
           ].map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap text-xs ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                <Icon size={15} />
+                <Icon size={14} className={isActive ? 'text-blue-600' : 'text-slate-400'} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -116,17 +117,15 @@ export function EmployeeDetail() {
         </div>
       </div>
 
-      {/* Tab 1: Contracts (Demonstrating Historical & Current Contracts) */}
+      {/* Tab 1: Contracts */}
       {activeTab === 'contracts' && (
-        <div className="glass-card p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div>
-              <h3 className="font-bold text-slate-100 text-sm">Employment Contracts</h3>
-              <p className="text-xs text-slate-400">All historical, running, and draft compensation contracts</p>
-            </div>
+        <div className="card p-5 space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-900 text-sm font-heading">Employment Contracts</h3>
+            <p className="text-xs text-slate-500 mt-0.5">All historical, running, and draft compensation contracts</p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="custom-table-container">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -141,15 +140,15 @@ export function EmployeeDetail() {
               <tbody>
                 {contracts.map((c) => (
                   <tr key={c.id}>
-                    <td className="font-bold text-sky-400">{c.contract_code}</td>
-                    <td className="text-slate-300 text-xs">
-                      {c.start_date.split('T')[0]} → {c.end_date ? c.end_date.split('T')[0] : 'Present'}
+                    <td className="font-bold text-blue-600">{c.contract_code}</td>
+                    <td className="text-slate-600 text-xs font-medium">
+                      {c.start_date ? c.start_date.split('T')[0] : ''} → {c.end_date ? c.end_date.split('T')[0] : 'Present'}
                     </td>
-                    <td className="text-slate-200 font-medium">{c.structure_name}</td>
-                    <td className="font-extrabold text-slate-100 text-base">
-                      ₹{Number(c.wage).toLocaleString()}
+                    <td className="text-slate-800 font-medium">{c.structure_name}</td>
+                    <td className="font-extrabold text-slate-900 text-sm">
+                      ₹{Number(c.wage).toLocaleString('en-IN')}
                     </td>
-                    <td className="text-xs text-slate-400">{c.schedule_name || 'Standard 40h'}</td>
+                    <td className="text-xs text-slate-500">{c.schedule_name || 'Standard 40h'}</td>
                     <td>
                       <Badge status={c.status} />
                     </td>
@@ -163,13 +162,13 @@ export function EmployeeDetail() {
 
       {/* Tab 2: Attendance */}
       {activeTab === 'attendance' && (
-        <div className="glass-card p-5 space-y-4">
-          <div className="border-b border-white/5 pb-3">
-            <h3 className="font-bold text-slate-100 text-sm">Attendance Logs</h3>
-            <p className="text-xs text-slate-400">Recent check-in, check-out, and worked hours</p>
+        <div className="card p-5 space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-900 text-sm font-heading">Attendance Logs</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Recent check-in, check-out, and worked hours</p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="custom-table-container">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -184,11 +183,11 @@ export function EmployeeDetail() {
               <tbody>
                 {attendance.map((a) => (
                   <tr key={a.id}>
-                    <td className="font-semibold text-slate-200">{a.date.split('T')[0]}</td>
-                    <td className="text-slate-300">{a.check_in ? a.check_in.split('T')[1]?.slice(0, 5) : '-'}</td>
-                    <td className="text-slate-300">{a.check_out ? a.check_out.split('T')[1]?.slice(0, 5) : '-'}</td>
-                    <td className="font-bold text-sky-400">{a.worked_hours} hrs</td>
-                    <td className="text-slate-400 text-xs">{a.break_hours} hr</td>
+                    <td className="font-semibold text-slate-800">{a.date ? a.date.split('T')[0] : ''}</td>
+                    <td className="text-slate-600">{a.check_in ? a.check_in.split('T')[1]?.slice(0, 5) : '-'}</td>
+                    <td className="text-slate-600">{a.check_out ? a.check_out.split('T')[1]?.slice(0, 5) : '-'}</td>
+                    <td className="font-bold text-blue-600">{a.worked_hours} hrs</td>
+                    <td className="text-slate-500 text-xs">{a.break_hours} hr</td>
                     <td><Badge status={a.status} /></td>
                   </tr>
                 ))}
@@ -200,22 +199,21 @@ export function EmployeeDetail() {
 
       {/* Tab 3: Time Off & Allocations */}
       {activeTab === 'leaves' && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Leave Balances Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {allocations.map((al) => (
-              <div key={al.id} className="glass-card p-4 space-y-2 border-l-4" style={{ borderColor: al.type_color }}>
-                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">{al.type_name}</p>
+              <div key={al.id} className="card p-4 space-y-2 border-l-4 border-blue-500">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider font-heading">{al.type_name}</p>
                 <div className="flex items-baseline justify-between">
-                  <h3 className="text-2xl font-black text-slate-100">{al.remaining_days} <span className="text-xs font-normal text-slate-400">days left</span></h3>
+                  <h3 className="text-2xl font-extrabold text-slate-900 font-heading">{al.remaining_days} <span className="text-xs font-normal text-slate-500">days left</span></h3>
                   <span className="text-xs text-slate-400">Total: {al.allocated_days}d</span>
                 </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full"
+                    className="h-full rounded-full bg-blue-600"
                     style={{
-                      width: `${(al.remaining_days / al.allocated_days) * 100}%`,
-                      backgroundColor: al.type_color
+                      width: `${Math.min(100, (al.remaining_days / (al.allocated_days || 1)) * 100)}%`
                     }}
                   />
                 </div>
@@ -224,11 +222,11 @@ export function EmployeeDetail() {
           </div>
 
           {/* Time off requests */}
-          <div className="glass-card p-5 space-y-4">
-            <div className="border-b border-white/5 pb-3">
-              <h3 className="font-bold text-slate-100 text-sm">Time Off History</h3>
+          <div className="card p-5 space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-sm font-heading">Time Off History</h3>
             </div>
-            <div className="overflow-x-auto">
+            <div className="custom-table-container">
               <table className="custom-table">
                 <thead>
                   <tr>
@@ -243,11 +241,11 @@ export function EmployeeDetail() {
                 <tbody>
                   {leaves.map((l) => (
                     <tr key={l.id}>
-                      <td className="font-bold" style={{ color: l.type_color }}>{l.type_name}</td>
-                      <td>{l.start_date.split('T')[0]}</td>
-                      <td>{l.end_date.split('T')[0]}</td>
-                      <td className="font-bold text-slate-100">{l.requested_amount} {l.unit}</td>
-                      <td className="text-slate-300 text-xs max-w-xs truncate">{l.reason}</td>
+                      <td className="font-bold text-slate-800">{l.type_name}</td>
+                      <td className="text-slate-600">{l.start_date ? l.start_date.split('T')[0] : ''}</td>
+                      <td className="text-slate-600">{l.end_date ? l.end_date.split('T')[0] : ''}</td>
+                      <td className="font-bold text-slate-900">{l.requested_amount || l.days_requested} {l.unit || 'Days'}</td>
+                      <td className="text-slate-500 text-xs max-w-xs truncate">{l.reason}</td>
                       <td><Badge status={l.status} /></td>
                     </tr>
                   ))}
@@ -260,13 +258,13 @@ export function EmployeeDetail() {
 
       {/* Tab 4: Payslips */}
       {activeTab === 'payslips' && (
-        <div className="glass-card p-5 space-y-4">
-          <div className="border-b border-white/5 pb-3">
-            <h3 className="font-bold text-slate-100 text-sm">Historical Payslips</h3>
-            <p className="text-xs text-slate-400">Computed and finalized payslip ledger</p>
+        <div className="card p-5 space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-900 text-sm font-heading">Historical Payslips</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Computed and finalized payslip ledger</p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="custom-table-container">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -282,12 +280,12 @@ export function EmployeeDetail() {
               <tbody>
                 {payslips.map((ps) => (
                   <tr key={ps.id}>
-                    <td className="font-bold text-sky-400">{ps.payslip_code}</td>
-                    <td className="text-slate-200 font-semibold">{ps.period_month}</td>
-                    <td className="text-slate-300">₹{Number(ps.gross_salary).toLocaleString()}</td>
-                    <td className="text-rose-400">₹{Number(ps.total_deductions).toLocaleString()}</td>
-                    <td className="font-black text-emerald-400 text-base">
-                      ₹{Number(ps.net_salary).toLocaleString()}
+                    <td className="font-bold text-blue-600">{ps.payslip_code || `PS-${ps.id}`}</td>
+                    <td className="text-slate-700 font-semibold">{ps.period_month || ps.period_start?.slice(0, 7)}</td>
+                    <td className="text-slate-600">₹{Number(ps.gross_salary).toLocaleString('en-IN')}</td>
+                    <td className="text-rose-600">₹{Number(ps.total_deductions).toLocaleString('en-IN')}</td>
+                    <td className="font-extrabold text-emerald-600 text-sm">
+                      ₹{Number(ps.net_salary).toLocaleString('en-IN')}
                     </td>
                     <td><Badge status={ps.status} /></td>
                     <td className="text-right">
@@ -316,43 +314,43 @@ export function EmployeeDetail() {
 
       {/* Tab 5: Master & Banking Profile */}
       {activeTab === 'profile' && (
-        <div className="glass-card p-6 space-y-6">
+        <div className="card p-6 space-y-6">
           <div>
-            <h3 className="font-bold text-slate-100 text-sm border-b border-white/5 pb-2">Master Information</h3>
+            <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2 font-heading">Master Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 text-xs">
               <div>
                 <span className="text-slate-400 block font-medium">Work Email:</span>
-                <span className="text-slate-100 font-semibold">{employee.email}</span>
+                <span className="text-slate-800 font-semibold">{employee.email}</span>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Phone:</span>
-                <span className="text-slate-100 font-semibold">{employee.phone || 'N/A'}</span>
+                <span className="text-slate-800 font-semibold">{employee.phone || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Gender:</span>
-                <span className="text-slate-100 font-semibold">{employee.gender}</span>
+                <span className="text-slate-800 font-semibold">{employee.gender || 'Not specified'}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h3 className="font-bold text-slate-100 text-sm border-b border-white/5 pb-2">Banking & Statutory</h3>
+            <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2 font-heading">Banking & Statutory</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3 text-xs">
               <div>
                 <span className="text-slate-400 block font-medium">Bank Name:</span>
-                <span className="text-slate-100 font-semibold">{employee.bank_name || 'Not Configured (Warning)'}</span>
+                <span className="text-slate-800 font-semibold">{employee.bank_name || 'Not Configured (Warning)'}</span>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Account Number:</span>
-                <span className="text-slate-100 font-semibold">{employee.bank_account_no || 'N/A'}</span>
+                <span className="text-slate-800 font-semibold">{employee.bank_account_no || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">IFSC Code:</span>
-                <span className="text-slate-100 font-semibold">{employee.bank_ifsc || 'N/A'}</span>
+                <span className="text-slate-800 font-semibold">{employee.bank_ifsc || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">PAN Number:</span>
-                <span className="text-slate-100 font-semibold">{employee.pan_number || 'N/A'}</span>
+                <span className="text-slate-800 font-semibold">{employee.pan_no || employee.pan_number || 'N/A'}</span>
               </div>
             </div>
           </div>

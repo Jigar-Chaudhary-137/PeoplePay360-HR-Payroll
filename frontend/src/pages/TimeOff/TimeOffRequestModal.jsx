@@ -125,9 +125,9 @@ export function TimeOffRequestModal({ isOpen, onClose, onSuccess }) {
 
         {/* Live Balance indicator */}
         {activeType?.requires_allocation && (
-          <div className="p-3 rounded-xl bg-sky-950/40 border border-sky-500/30 flex items-center justify-between">
-            <span className="text-slate-300">Available Balance:</span>
-            <span className="text-sm font-extrabold text-sky-400">{remainingDays} Days Available</span>
+          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
+            <span className="text-slate-600">Available Balance:</span>
+            <span className="text-sm font-bold text-blue-700">{remainingDays} Days Available</span>
           </div>
         )}
 
@@ -165,7 +165,7 @@ export function TimeOffRequestModal({ isOpen, onClose, onSuccess }) {
               step="0.5"
               min="0.5"
               required
-              className="form-input font-bold text-slate-100"
+              className="form-input font-bold text-slate-800"
               value={requestedAmount}
               onChange={(e) => setRequestedAmount(Number(e.target.value))}
             />
@@ -184,7 +184,7 @@ export function TimeOffRequestModal({ isOpen, onClose, onSuccess }) {
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
           <button type="button" onClick={onClose} className="btn-secondary">
             Cancel
           </button>

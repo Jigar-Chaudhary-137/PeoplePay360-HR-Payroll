@@ -32,12 +32,12 @@ export default function TimeOffTypeModal({
   const [submitting, setSubmitting] = useState(false);
 
   const colorPresets = [
-    { label: 'Blue', hex: '#3B82F6', border: 'border-blue-500', bg: 'bg-blue-500' },
-    { label: 'Emerald', hex: '#10B981', border: 'border-emerald-500', bg: 'bg-emerald-500' },
-    { label: 'Violet', hex: '#8B5CF6', border: 'border-purple-500', bg: 'bg-purple-500' },
-    { label: 'Amber', hex: '#F59E0B', border: 'border-amber-500', bg: 'bg-amber-500' },
-    { label: 'Rose', hex: '#F43F5E', border: 'border-rose-500', bg: 'bg-rose-500' },
-    { label: 'Slate', hex: '#64748B', border: 'border-slate-500', bg: 'bg-slate-500' }
+    { label: 'Blue', hex: '#2563eb', border: 'border-blue-500', bg: 'bg-blue-600' },
+    { label: 'Emerald', hex: '#059669', border: 'border-emerald-500', bg: 'bg-emerald-600' },
+    { label: 'Violet', hex: '#7c3aed', border: 'border-purple-500', bg: 'bg-purple-600' },
+    { label: 'Amber', hex: '#d97706', border: 'border-amber-500', bg: 'bg-amber-600' },
+    { label: 'Rose', hex: '#e11d48', border: 'border-rose-500', bg: 'bg-rose-600' },
+    { label: 'Slate', hex: '#475569', border: 'border-slate-500', bg: 'bg-slate-600' }
   ];
 
   useEffect(() => {
@@ -135,8 +135,8 @@ export default function TimeOffTypeModal({
         {/* Type Name & Code */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-slate-300 font-semibold mb-1">
-              Type Name <span className="text-rose-400">*</span>
+            <label className="block text-slate-700 font-semibold mb-1">
+              Type Name <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
               <input
@@ -152,7 +152,7 @@ export default function TimeOffTypeModal({
               />
             </div>
             {errors.name && (
-              <p className="text-rose-400 text-[11px] mt-1 flex items-center gap-1">
+              <p className="text-rose-600 text-[11px] mt-1 flex items-center gap-1">
                 <AlertCircle size={12} />
                 {errors.name}
               </p>
@@ -160,7 +160,7 @@ export default function TimeOffTypeModal({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">
+            <label className="block text-slate-700 font-semibold mb-1">
               Code (Short Name)
             </label>
             <input
@@ -177,14 +177,14 @@ export default function TimeOffTypeModal({
         {/* Unit & Requires Allocation */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-              <Clock size={13} className="text-sky-400" />
+            <label className="block text-slate-700 font-semibold mb-1 flex items-center gap-1.5">
+              <Clock size={13} className="text-blue-600" />
               <span>Unit of Measure</span>
             </label>
             <select
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="form-input w-full bg-slate-900 cursor-pointer"
+              className="form-select w-full"
             >
               <option value="Days">Days (Daily increments)</option>
               <option value="Hours">Hours (Hourly increments)</option>
@@ -192,14 +192,14 @@ export default function TimeOffTypeModal({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-              <Tag size={13} className="text-emerald-400" />
+            <label className="block text-slate-700 font-semibold mb-1 flex items-center gap-1.5">
+              <Tag size={13} className="text-emerald-600" />
               <span>Requires Allocation</span>
             </label>
             <select
               value={requiresAllocation}
               onChange={(e) => setRequiresAllocation(e.target.value)}
-              className="form-input w-full bg-slate-900 cursor-pointer"
+              className="form-select w-full"
             >
               <option value="Required">Required (Quota balance needed)</option>
               <option value="No">No (Unmetered / Non-quota)</option>
@@ -210,14 +210,14 @@ export default function TimeOffTypeModal({
         {/* Approval Workflow & Payroll Work Entry */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-              <ShieldCheck size={13} className="text-amber-400" />
+            <label className="block text-slate-700 font-semibold mb-1 flex items-center gap-1.5">
+              <ShieldCheck size={13} className="text-amber-600" />
               <span>Approval Workflow</span>
             </label>
             <select
               value={approval}
               onChange={(e) => setApproval(e.target.value)}
-              className="form-input w-full bg-slate-900 cursor-pointer"
+              className="form-select w-full"
             >
               <option value="Manager">Manager</option>
               <option value="Officer">Officer</option>
@@ -227,14 +227,14 @@ export default function TimeOffTypeModal({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-              <DollarSign size={13} className="text-purple-400" />
+            <label className="block text-slate-700 font-semibold mb-1 flex items-center gap-1.5">
+              <DollarSign size={13} className="text-purple-600" />
               <span>Payroll / Work Entry</span>
             </label>
             <select
               value={payrollWorkEntry}
               onChange={(e) => setPayrollWorkEntry(e.target.value)}
-              className="form-input w-full bg-slate-900 cursor-pointer"
+              className="form-select w-full"
             >
               <option value="Leave Work Entry">Leave Work Entry (Paid)</option>
               <option value="Sick Leave Work Entry">Sick Leave Work Entry</option>
@@ -249,8 +249,8 @@ export default function TimeOffTypeModal({
         {/* Display Color & Active Status */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1.5 flex items-center gap-1.5">
-              <Palette size={13} className="text-pink-400" />
+            <label className="block text-slate-700 font-semibold mb-1.5 flex items-center gap-1.5">
+              <Palette size={13} className="text-pink-600" />
               <span>Display Color</span>
             </label>
             <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function TimeOffTypeModal({
                     type="button"
                     onClick={() => setDisplayColor(c.label)}
                     className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                      isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950 scale-110 shadow-lg' : 'opacity-70 hover:opacity-100'
+                      isSelected ? 'ring-2 ring-blue-600 ring-offset-2 scale-110 shadow-md' : 'opacity-70 hover:opacity-100'
                     }`}
                     style={{ backgroundColor: c.hex }}
                     title={c.label}
@@ -271,14 +271,14 @@ export default function TimeOffTypeModal({
                   </button>
                 );
               })}
-              <span className="text-[11px] font-semibold text-slate-300 ml-1">
+              <span className="text-[11px] font-semibold text-slate-600 ml-1">
                 {displayColor}
               </span>
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">
+            <label className="block text-slate-700 font-semibold mb-1">
               Active Status
             </label>
             <div className="flex items-center gap-3 mt-1.5">
@@ -287,17 +287,17 @@ export default function TimeOffTypeModal({
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded text-sky-600 bg-slate-900 border-white/20 focus:ring-sky-500 focus:ring-offset-slate-950"
+                  className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
                 />
-                <span className="text-xs text-slate-200 font-medium">
+                <span className="text-xs text-slate-700 font-medium">
                   {isActive ? (
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       Active (Visible in requests)
                     </span>
                   ) : (
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-slate-500" />
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
                       Inactive (Archived)
                     </span>
                   )}
@@ -309,8 +309,8 @@ export default function TimeOffTypeModal({
 
         {/* Configuration Notes */}
         <div>
-          <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-            <FileText size={13} className="text-sky-400" />
+          <label className="block text-slate-700 font-semibold mb-1 flex items-center gap-1.5">
+            <FileText size={13} className="text-blue-600" />
             <span>Configuration Notes</span>
           </label>
           <textarea
@@ -318,12 +318,12 @@ export default function TimeOffTypeModal({
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             placeholder="Standard annual leave policy description and balance rules..."
-            className="form-input w-full resize-none"
+            className="form-textarea w-full resize-none"
           />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
           <button
             type="button"
             onClick={onClose}
@@ -335,7 +335,7 @@ export default function TimeOffTypeModal({
           <button
             type="submit"
             disabled={submitting}
-            className="btn-primary flex items-center gap-2 shadow-lg shadow-sky-600/30"
+            className="btn-primary flex items-center gap-2 shadow-sm"
           >
             {submitting ? (
               <>

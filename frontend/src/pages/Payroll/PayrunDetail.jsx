@@ -68,12 +68,14 @@ export function PayrunDetail() {
     try {
       const res = await payrunAPI.markPaid(id);
       showToast(res.message, 'success');
-      // Trigger celebration confetti
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      // Celebration confetti
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {}
       loadPayrun();
     } catch (err) {
       showToast(err.message, 'error');
@@ -104,27 +106,27 @@ export function PayrunDetail() {
   const status = payrun.status;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Back button */}
-      <Link to="/payruns" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+      <Link to="/payruns" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors">
         <ArrowLeft size={14} />
         <span>Back to Payruns</span>
       </Link>
 
       {/* Payrun Command Header */}
-      <div className="glass-card p-6 space-y-6">
+      <div className="card p-6 space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black text-slate-100">{payrun.name}</h1>
+              <h1 className="text-2xl font-bold text-slate-900 font-heading">{payrun.name}</h1>
               <Badge status={payrun.status} />
             </div>
-            <p className="text-xs text-slate-400 mt-1 flex items-center gap-4 flex-wrap">
-              <span className="font-mono text-sky-400 font-bold">{payrun.payrun_code}</span>
+            <p className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap font-medium">
+              <span className="font-mono text-blue-600 font-bold">{payrun.payrun_code || `PR-${payrun.id}`}</span>
               <span>•</span>
-              <span>Period: <strong className="text-slate-200">{payrun.period_month}</strong> ({payrun.start_date.split('T')[0]} → {payrun.end_date.split('T')[0]})</span>
+              <span>Period: <strong className="text-slate-700 font-mono">{payrun.period_month || payrun.period_start?.slice(0, 7)}</strong></span>
               <span>•</span>
-              <span>Structure: <strong className="text-slate-200">{payrun.structure_name}</strong></span>
+              <span>Structure: <strong className="text-slate-700">{payrun.structure_name || 'Regular Structure'}</strong></span>
             </p>
           </div>
 
@@ -134,10 +136,10 @@ export function PayrunDetail() {
               <button
                 onClick={handleCompute}
                 disabled={actionLoading}
-                className="btn-primary text-xs"
+                className="btn-primary text-xs px-3.5 py-2"
               >
                 <Calculator size={15} />
-                <span>{actionLoading ? 'Executing Engine...' : 'Compute Payrun'}</span>
+                <span>{actionLoading ? 'Computing...' : 'Compute Payrun'}</span>
               </button>
             )}
 
@@ -146,19 +148,19 @@ export function PayrunDetail() {
                 <button
                   onClick={handleCompute}
                   disabled={actionLoading}
-                  className="btn-secondary text-xs"
+                  className="btn-secondary text-xs px-3 py-2"
                 >
-                  <Calculator size={15} />
+                  <Calculator size={14} />
                   <span>Re-Compute</span>
                 </button>
                 {hasRole('HR Payroll Admin', 'Admin') && (
                   <button
                     onClick={handleValidate}
                     disabled={actionLoading}
-                    className="btn-primary text-xs bg-gradient-to-r from-amber-600 to-amber-500"
+                    className="btn-primary text-xs px-3.5 py-2 bg-amber-600 hover:bg-amber-700"
                   >
                     <CheckCircle2 size={15} />
-                    <span>Validate & Finalize</span>
+                    <span>Validate & Lock</span>
                   </button>
                 )}
               </>
@@ -168,10 +170,10 @@ export function PayrunDetail() {
               <button
                 onClick={handleMarkPaid}
                 disabled={actionLoading}
-                className="btn-success text-xs"
+                className="btn-success text-xs px-3.5 py-2"
               >
                 <DollarSign size={15} />
-                <span>Mark Paid & Record Disbursement</span>
+                <span>Mark Paid & Disburse</span>
               </button>
             )}
 
@@ -179,17 +181,17 @@ export function PayrunDetail() {
               <button
                 onClick={handleBulkEmail}
                 disabled={emailing}
-                className="btn-secondary text-xs"
+                className="btn-secondary text-xs px-3 py-2"
               >
-                <Send size={15} />
-                <span>{emailing ? 'Dispatching...' : 'Bulk Email Payslips'}</span>
+                <Send size={14} />
+                <span>{emailing ? 'Sending...' : 'Email Payslips'}</span>
               </button>
             )}
           </div>
         </div>
 
         {/* Workflow State Step Progress Bar */}
-        <div className="grid grid-cols-4 gap-2 pt-4 border-t border-white/10 text-xs">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 pt-4 border-t border-slate-100 text-xs">
           {[
             { key: 'draft', label: '1. Draft (Configured)' },
             { key: 'computed', label: '2. Computed (Calculated)' },
@@ -206,10 +208,10 @@ export function PayrunDetail() {
                 key={st.key}
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   isCurrent
-                    ? 'bg-sky-950/60 border-sky-500 text-sky-300 font-bold shadow-sm'
+                    ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold shadow-2xs'
                     : isCompleted
-                    ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300 font-medium'
-                    : 'bg-white/5 border-white/5 text-slate-500'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-medium'
+                    : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}
               >
                 {st.label}
@@ -220,53 +222,51 @@ export function PayrunDetail() {
       </div>
 
       {/* Summary Financial Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="glass-card p-4 space-y-1">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Gross Earnings</p>
-          <h3 className="text-xl font-extrabold text-slate-100">₹{Number(payrun.total_gross || 0).toLocaleString()}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider font-heading">Total Gross Earnings</p>
+          <h3 className="text-2xl font-bold text-slate-900 font-heading">₹{Number(payrun.total_gross || 0).toLocaleString('en-IN')}</h3>
         </div>
-        <div className="glass-card p-4 space-y-1">
-          <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Total Deductions</p>
-          <h3 className="text-xl font-extrabold text-rose-300">₹{Number(payrun.total_deductions || 0).toLocaleString()}</h3>
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-bold text-rose-600 uppercase tracking-wider font-heading">Total Deductions</p>
+          <h3 className="text-2xl font-bold text-rose-700 font-heading">₹{Number(payrun.total_deductions || 0).toLocaleString('en-IN')}</h3>
         </div>
-        <div className="glass-card p-4 space-y-1 border-sky-500/30 bg-sky-950/20">
-          <p className="text-xs font-bold text-sky-400 uppercase tracking-wider">Total Net Disbursement</p>
-          <h3 className="text-2xl font-black text-sky-300">₹{Number(payrun.total_net || 0).toLocaleString()}</h3>
+        <div className="card p-5 space-y-1 border-blue-200 bg-blue-50/30">
+          <p className="text-xs font-bold text-blue-700 uppercase tracking-wider font-heading">Total Net Disbursement</p>
+          <h3 className="text-2xl xl:text-3xl font-extrabold text-blue-700 font-heading">₹{Number(payrun.total_net || 0).toLocaleString('en-IN')}</h3>
         </div>
-        <div className="glass-card p-4 space-y-1">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Included Employees</p>
-          <h3 className="text-xl font-extrabold text-slate-100">{payrun.employee_count} Staff</h3>
+        <div className="card p-5 space-y-1">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider font-heading">Included Employees</p>
+          <h3 className="text-2xl font-bold text-slate-900 font-heading">{payrun.employee_count || payslips.length || 1} <span className="text-sm font-medium text-slate-400">Staff</span></h3>
         </div>
       </div>
 
       {/* Anomalies and Warnings Box */}
       {anomalies.length > 0 && (
-        <div className="glass-card p-5 border-amber-500/30 bg-amber-950/10 space-y-3">
-          <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-            <ShieldAlert size={18} />
+        <div className="card p-5 border-amber-200 bg-amber-50/40 space-y-3">
+          <div className="flex items-center gap-2 text-amber-900 font-bold text-sm font-heading">
+            <ShieldAlert size={18} className="text-amber-600" />
             <span>Surveillance Engine: {anomalies.length} Compliance Warnings & Anomalies Detected</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {anomalies.map((a) => (
+            {anomalies.map((a, idx) => (
               <div
-                key={a.id}
-                className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
-                  a.severity === 'critical'
-                    ? 'bg-rose-950/40 border-rose-500/40 text-rose-200'
-                    : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
-                }`}
+                key={idx}
+                className="p-3.5 rounded-xl border text-xs space-y-1.5 bg-white border-amber-200 text-slate-800 shadow-2xs"
               >
                 <div className="flex items-center justify-between font-bold">
-                  <span>{a.title}</span>
-                  <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-black/40">
+                  <span className="text-sm text-slate-900 font-heading">{a.title}</span>
+                  <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
                     {a.severity}
                   </span>
                 </div>
-                <p className="text-slate-300">{a.reason}</p>
-                <div className="text-[11px] text-slate-400 font-medium">
-                  Employee: <strong className="text-slate-100">{a.first_name} {a.last_name} ({a.emp_code})</strong>
-                </div>
+                <p className="text-slate-600 leading-relaxed">{a.reason || a.message}</p>
+                {a.first_name && (
+                  <div className="text-xs text-slate-500 font-medium pt-1 border-t border-slate-100">
+                    Employee: <strong className="text-slate-800">{a.first_name} {a.last_name} ({a.emp_code})</strong>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -274,18 +274,18 @@ export function PayrunDetail() {
       )}
 
       {/* Payslips Ledger Grid */}
-      <div className="glass-card overflow-hidden">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between">
-          <h3 className="font-bold text-slate-100 text-sm">Payslips in this Payrun ({payslips.length})</h3>
-          <span className="text-xs text-slate-400">Click inspect to see dynamic rule math calculations</span>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-bold text-slate-900 text-base font-heading">Payslips in this Payrun ({payslips.length})</h3>
+          <span className="text-xs text-slate-400">Click inspect to examine salary rule calculations</span>
         </div>
 
         {payslips.length === 0 ? (
-          <div className="p-8 text-center text-slate-400 text-xs">
-            No payslips computed yet. Click "Compute Payrun" to run salary rules for all {payrun.employee_count} included employees.
+          <div className="card p-10 text-center text-slate-500 text-sm">
+            No payslips computed yet. Click "Compute Payrun" to run salary rules for all included employees.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="custom-table-container">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -303,33 +303,35 @@ export function PayrunDetail() {
               <tbody>
                 {payslips.map((ps) => (
                   <tr key={ps.id}>
-                    <td className="font-mono font-bold text-sky-400">{ps.payslip_code}</td>
+                    <td className="font-bold text-blue-600 text-sm">{ps.payslip_code || `PS-${ps.id}`}</td>
                     <td>
                       <Link
                         to={`/employees/${ps.employee_id}`}
-                        className="font-bold text-slate-100 hover:text-sky-400 transition-colors block"
+                        className="font-bold text-slate-900 hover:text-blue-600 transition-colors block text-sm font-heading"
                       >
                         {ps.first_name} {ps.last_name}
                       </Link>
-                      <span className="text-[11px] text-slate-400">{ps.emp_code} • {ps.department_name}</span>
+                      <span className="text-xs text-slate-400">{ps.emp_code} • {ps.department_name}</span>
                     </td>
-                    <td className="text-xs text-slate-300">
-                      ₹{Number(ps.base_wage).toLocaleString()}
+                    <td className="text-sm text-slate-700 font-medium">
+                      ₹{Number(ps.base_wage || ps.wage || ps.gross_salary || 0).toLocaleString('en-IN')}
                     </td>
-                    <td className="text-xs text-slate-300">
-                      <span className="font-bold text-slate-100">{ps.worked_days}</span> / {ps.total_days}d
+                    <td className="text-xs text-slate-600">
+                      <span className="font-bold text-slate-900">{ps.worked_days}</span> / {ps.total_days || ps.scheduled_days || 22} days
                       {Number(ps.unpaid_leave_days) > 0 && (
-                        <span className="text-rose-400 text-[10px] ml-1">({ps.unpaid_leave_days}d LOP)</span>
+                        <span className="text-rose-600 text-[11px] ml-1 font-semibold">({ps.unpaid_leave_days}d LOP)</span>
                       )}
                     </td>
-                    <td className="text-slate-200 font-semibold">₹{Number(ps.gross_salary).toLocaleString()}</td>
-                    <td className="text-rose-400 font-semibold">₹{Number(ps.total_deductions).toLocaleString()}</td>
-                    <td className="font-black text-emerald-400 text-base">
-                      ₹{Number(ps.net_salary).toLocaleString()}
+                    <td className="text-slate-800 font-semibold text-sm">₹{Number(ps.gross_salary).toLocaleString('en-IN')}</td>
+                    <td className="text-rose-600 font-semibold text-sm">₹{Number(ps.total_deductions).toLocaleString('en-IN')}</td>
+                    <td>
+                      <span className="font-extrabold text-emerald-600 text-sm">
+                        ₹{Number(ps.net_salary).toLocaleString('en-IN')}
+                      </span>
                     </td>
                     <td><Badge status={ps.status} /></td>
                     <td className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Link
                           to={`/payslips/${ps.id}`}
                           className="btn-secondary text-xs py-1 px-2.5"

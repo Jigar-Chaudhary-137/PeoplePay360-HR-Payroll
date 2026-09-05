@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, FileSpreadsheet, Clock, CalendarOff,
+  LayoutDashboard, Users, FileText, Clock, CalendarOff,
   DollarSign, Sliders, ShieldCheck, UserCheck, LogOut, Sparkles,
-  ChevronDown, Menu, X, Briefcase, ChevronRight, Search
+  ChevronDown, Menu, X, Bell, Briefcase, ChevronRight, CheckCheck,
+  TrendingUp, CalendarDays, Receipt
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotify } from '../context/NotificationContext';
@@ -11,21 +12,42 @@ import { AskPeoplePayAI } from '../components/AI/AskPeoplePayAI';
 
 export function DashboardLayout() {
   const { user, logout, switchRole, hasRole, isEmployeeOnly } = useAuth();
-  const { notifications, unreadCount } = useNotify();
+  const { notifications, unreadCount, markRead, markAllRead } = useNotify();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const [personaMenuOpen, setPersonaMenuOpen] = useState(false);
-  const [timeOffDropdownOpen, setTimeOffDropdownOpen] = useState(true);
+  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+
+  const personaMenuRef = useRef(null);
+  const notifMenuRef = useRef(null);
+
+  // Close popovers on click outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (personaMenuRef.current && !personaMenuRef.current.contains(e.target)) {
+        setPersonaMenuOpen(false);
+      }
+      if (notifMenuRef.current && !notifMenuRef.current.contains(e.target)) {
+        setNotifMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const personas = [
-    { role: 'Admin', name: 'Vikram Verma', email: 'admin@peoplepay360.com', badge: 'Full Admin' },
-    { role: 'HR Payroll Admin', name: 'Amit Singh', email: 'payroll.admin@peoplepay360.com', badge: 'Payroll Lead' },
-    { role: 'HR Payroll User', name: 'Neha Gupta', email: 'payroll.user@peoplepay360.com', badge: 'Payroll Ops' },
-    { role: 'HR Manager', name: 'Priya Patel', email: 'hr.manager@peoplepay360.com', badge: 'People Ops' },
+    { role: 'Admin', name: 'Vikram Verma', email: 'admin@peoplepay360.com', badge: 'Superadmin' },
+    { role: 'HR Manager', name: 'Priya Patel', email: 'priya.patel@peoplepay360.com', badge: 'People Ops' },
+    { role: 'HR Payroll Admin', name: 'Amit Singh', email: 'amit.singh@peoplepay360.com', badge: 'Payroll Lead' },
+    { role: 'HR Payroll User', name: 'Neha Gupta', email: 'neha.gupta@peoplepay360.com', badge: 'Payroll Ops' },
     { role: 'Employee', name: 'Rahul Sharma', email: 'rahul.sharma@peoplepay360.com', badge: 'Self-Service' }
   ];
 
@@ -40,68 +62,106 @@ export function DashboardLayout() {
         navigate('/dashboard');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to switch persona:', err);
     }
   };
 
   const navGroups = [
     {
-      title: 'Self-Service',
-      items: [
-        { to: '/self-service', label: 'My Portal', icon: UserCheck, visible: true }
-      ]
-    },
-    {
       title: 'Overview',
       items: [
-        { to: '/dashboard', label: 'Payroll Dashboard', icon: LayoutDashboard, visible: !isEmployeeOnly }
+        {
+          to: '/dashboard',
+          label: 'Dashboard',
+          icon: LayoutDashboard,
+          visible: !isEmployeeOnly
+        },
+        {
+          to: '/self-service',
+          label: 'My Portal',
+          icon: UserCheck,
+          visible: true
+        }
       ]
     },
     {
       title: 'People',
       items: [
-        { to: '/employees', label: 'Employees', icon: Users, visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User') },
-        { to: '/contracts', label: 'Contracts', icon: FileSpreadsheet, visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User') }
+        {
+          to: '/employees',
+          label: 'Employees',
+          icon: Users,
+          visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User')
+        },
+        {
+          to: '/contracts',
+          label: 'Contracts',
+          icon: FileText,
+          visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User')
+        },
+        {
+          to: '/schedules',
+          label: 'Schedules',
+          icon: CalendarDays,
+          visible: hasRole('HR Manager', 'HR Payroll Admin')
+        }
       ]
     },
     {
       title: 'Time & Attendance',
       items: [
-        { to: '/schedules', label: 'Working Schedules', icon: Clock, visible: hasRole('HR Manager', 'HR Payroll Admin') },
-        { to: '/attendance', label: 'Attendance', icon: Clock, visible: true },
-        { to: '/time-off', label: 'Time Off & Leaves', icon: CalendarOff, visible: true }
+        {
+          to: '/attendance',
+          label: 'Attendance',
+          icon: Clock,
+          visible: true
+        },
+        {
+          to: '/time-off/requests',
+          label: 'Time Off Requests',
+          icon: CalendarOff,
+          visible: true
+        },
+        {
+          to: '/time-off/types',
+          label: 'Leave Policies',
+          icon: Sliders,
+          visible: hasRole('HR Manager', 'HR Payroll Admin')
+        }
       ]
     },
     {
-<<<<<<< HEAD
-      to: '/time-off',
-      label: 'Time Off & Leaves',
-      icon: CalendarOff,
-      visible: true,
-      subItems: [
-        { to: '/time-off/requests', label: 'Time Off Requests' },
-        { to: '/time-off/types', label: 'Time Off Types' }
-      ]
-    },
-    // Payroll Ops
-    {
-      to: '/payruns',
-      label: 'Payruns (Process)',
-      icon: DollarSign,
-      visible: hasRole('HR Payroll Admin', 'HR Payroll User')
-=======
-      title: 'Payroll Operations',
+      title: 'Payroll',
       items: [
-        { to: '/payruns', label: 'Payruns (Process)', icon: DollarSign, visible: hasRole('HR Payroll Admin', 'HR Payroll User') },
-        { to: '/payslips', label: 'Payslips (Ledger)', icon: Briefcase, visible: true },
-        { to: '/salary-config', label: 'Salary Structures', icon: Sliders, visible: hasRole('HR Payroll Admin', 'HR Payroll User') }
+        {
+          to: '/payruns',
+          label: 'Payruns',
+          icon: DollarSign,
+          visible: hasRole('HR Payroll Admin', 'HR Payroll User')
+        },
+        {
+          to: '/payslips',
+          label: 'Payslips',
+          icon: Receipt,
+          visible: true
+        },
+        {
+          to: '/salary-config',
+          label: 'Salary Structures',
+          icon: Sliders,
+          visible: hasRole('HR Payroll Admin')
+        }
       ]
->>>>>>> b2ea854 (Update frontend UI and add Postman collection)
     },
     {
       title: 'Administration',
       items: [
-        { to: '/admin/users', label: 'User Management', icon: ShieldCheck, visible: hasRole('Admin') }
+        {
+          to: '/admin/users',
+          label: 'User Accounts',
+          icon: ShieldCheck,
+          visible: hasRole('Admin')
+        }
       ]
     }
   ];
@@ -109,376 +169,322 @@ export function DashboardLayout() {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path.includes('/self-service')) return 'Employee Self-Service Portal';
-    if (path.includes('/dashboard')) return 'Payroll Dashboard';
+    if (path.includes('/dashboard')) return 'HR & Payroll Dashboard';
     if (path.includes('/employees')) return 'Employee Directory';
     if (path.includes('/contracts')) return 'Contracts Management';
     if (path.includes('/schedules')) return 'Working Schedules';
-    if (path.includes('/attendance')) return 'Attendance Tracking';
-    if (path.includes('/time-off')) return 'Time Off & Leaves';
-    if (path.includes('/payruns')) return 'Payruns & Payroll Engine';
-    if (path.includes('/payslips')) return 'Payslip Ledger';
-    if (path.includes('/salary-config')) return 'Salary Configuration';
-    if (path.includes('/admin/users')) return 'User & Role Administration';
-    return 'PeoplePay360 Platform';
+    if (path.includes('/attendance')) return 'Time & Attendance Tracking';
+    if (path.includes('/time-off/types')) return 'Time Off Policy Configuration';
+    if (path.includes('/time-off')) return 'Time Off Requests';
+    if (path.includes('/payruns')) return 'Payrun Batches & Payroll Execution';
+    if (path.includes('/payslips')) return 'Payslips Ledger';
+    if (path.includes('/salary-config')) return 'Salary Structure & Rule Engine';
+    if (path.includes('/admin/users')) return 'User Accounts & Access Control';
+    return 'PeoplePay360 Operations';
   };
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100">
-      {/* Desktop Sidebar */}
-      <aside
-        className={`hidden md:flex ${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-slate-900/90 border-r border-white/10 flex-col transition-all duration-300 z-30 shrink-0 select-none backdrop-blur-xl`}
-      >
-        {/* Logo Header */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-white/10">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-sky-500/25 shrink-0">
-              360
-            </div>
-            {sidebarOpen && (
-              <div className="truncate">
-                <span className="font-extrabold text-base tracking-tight text-white block">PEOPLEPAY<span className="text-sky-400">360</span></span>
-                <span className="text-[11px] text-slate-400 uppercase tracking-wider block font-bold">HR & Payroll Suite</span>
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            aria-label="Toggle Sidebar"
-          >
-            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
-        </div>
+  const renderNavLinks = (onItemClick) => (
+    <div className="space-y-6">
+      {navGroups.map((group, gIdx) => {
+        const visibleItems = group.items.filter((item) => item.visible);
+        if (visibleItems.length === 0) return null;
 
-<<<<<<< HEAD
-        {/* Nav Links */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {navItems
-            .filter((item) => item.visible)
-            .map((item) => {
+        return (
+          <div key={gIdx} className="space-y-1">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2 font-heading">
+              {group.title}
+            </p>
+            {visibleItems.map((item) => {
               const Icon = item.icon;
-              const hasSubItems = item.subItems && item.subItems.length > 0;
-              const isPathActive = location.pathname === item.to || (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
-
-              if (hasSubItems) {
-                return (
-                  <div key={item.to} className="space-y-1">
-                    <div
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        isPathActive
-                          ? 'bg-gradient-to-r from-sky-600 to-sky-500 text-white shadow-md shadow-sky-600/30'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                      }`}
-                    >
-                      <NavLink
-                        to={item.to}
-                        className="flex items-center gap-3 flex-1 min-w-0"
-                        title={!sidebarOpen ? item.label : undefined}
-                      >
-                        <Icon size={19} className="shrink-0" />
-                        {sidebarOpen && <span className="truncate">{item.label}</span>}
-                      </NavLink>
-                      {sidebarOpen && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setTimeOffDropdownOpen(!timeOffDropdownOpen);
-                          }}
-                          className="p-1 rounded-lg hover:bg-black/20 text-white/80 hover:text-white transition-colors ml-1"
-                          title="Toggle Time Off menu"
-                        >
-                          <ChevronDown
-                            size={14}
-                            className={`transition-transform duration-200 ${
-                              timeOffDropdownOpen ? 'rotate-0' : '-rotate-90'
-                            }`}
-                          />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Submenu Dropdown */}
-                    {sidebarOpen && timeOffDropdownOpen && (
-                      <div className="ml-5 pl-3 border-l border-white/10 space-y-1 py-1">
-                        {item.subItems.map((sub) => {
-                          const isSubActive =
-                            sub.to === '/time-off/requests'
-                              ? location.pathname === '/time-off' || location.pathname.startsWith('/time-off/requests')
-                              : location.pathname.startsWith(sub.to);
-                          return (
-                            <NavLink
-                              key={sub.to}
-                              to={sub.to}
-                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                isSubActive
-                                  ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30'
-                                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                              }`}
-                            >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isSubActive ? 'bg-sky-400' : 'bg-slate-500'
-                                }`}
-                              />
-                              <span className="truncate">{sub.label}</span>
-                            </NavLink>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isPathActive
-                      ? 'bg-gradient-to-r from-sky-600 to-sky-500 text-white shadow-md shadow-sky-600/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                  }`}
-                  title={!sidebarOpen ? item.label : undefined}
+                  onClick={onItemClick}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 font-semibold shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`
+                  }
                 >
-                  <Icon size={19} className="shrink-0" />
-                  {sidebarOpen && <span className="truncate">{item.label}</span>}
+                  <Icon size={17} className="shrink-0" />
+                  <span>{item.label}</span>
                 </NavLink>
               );
             })}
-=======
-        {/* Navigation List */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-          {navGroups.map((group, idx) => {
-            const visibleItems = group.items.filter((item) => item.visible);
-            if (visibleItems.length === 0) return null;
+          </div>
+        );
+      })}
+    </div>
+  );
 
-            return (
-              <div key={idx} className="space-y-1.5">
-                {sidebarOpen && (
-                  <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    {group.title}
-                  </p>
-                )}
-                {visibleItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.to || (item.to !== '/dashboard' && item.to !== '/' && location.pathname.startsWith(item.to));
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-gradient-to-r from-sky-600 to-sky-500 text-white font-semibold shadow-md shadow-sky-600/30'
-                          : 'text-slate-300 hover:text-white hover:bg-white/5'
-                      }`}
-                      title={!sidebarOpen ? item.label : undefined}
-                    >
-                      <Icon size={20} className="shrink-0" />
-                      {sidebarOpen && <span className="truncate">{item.label}</span>}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            );
-          })}
->>>>>>> b2ea854 (Update frontend UI and add Postman collection)
-        </nav>
-
-        {/* AI Quick Drawer Trigger */}
-        <div className="p-3 border-t border-white/10">
-          <button
-            onClick={() => setAiDrawerOpen(true)}
-            className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600/30 to-sky-600/30 hover:from-indigo-600/40 hover:to-sky-600/40 border border-sky-500/30 text-sky-300 font-semibold text-sm transition-all shadow-lg shadow-sky-500/10"
-          >
-            <Sparkles size={18} className="text-sky-400 animate-pulse" />
-            {sidebarOpen && <span>Ask PeoplePay AI</span>}
-          </button>
+  return (
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+      {/* Desktop Fixed Sidebar */}
+      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col shrink-0 z-30 shadow-2xs">
+        {/* Brand Header */}
+        <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-xs">
+              360
+            </div>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900 font-heading">
+                PEOPLEPAY<span className="text-blue-600">360</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+                Enterprise Suite
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Authenticated User Footer */}
-        <div className="p-3 border-t border-white/10 bg-slate-950/60">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-9 h-9 rounded-xl bg-sky-950 border border-sky-500/40 text-sky-400 flex items-center justify-center font-bold text-sm shrink-0">
-                {user?.first_name?.[0] || 'U'}
+        {/* Scrollable Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3.5 py-5 space-y-6">
+          {renderNavLinks()}
+        </nav>
+
+        {/* Bottom User Card & Logout */}
+        <div className="p-3.5 border-t border-slate-200 bg-slate-50/50">
+          <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-white border border-slate-200 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs flex items-center justify-center shrink-0">
+                {user?.first_name?.charAt(0) || user?.role?.charAt(0) || 'U'}
               </div>
-              {sidebarOpen && (
-                <div className="truncate">
-                  <p className="text-xs font-bold text-slate-100 truncate">{user?.first_name} {user?.last_name}</p>
-                  <p className="text-[11px] text-sky-400 font-semibold truncate">{user?.role}</p>
-                </div>
-              )}
+              <div className="truncate">
+                <p className="text-xs font-bold text-slate-900 truncate">
+                  {user?.first_name ? `${user.first_name} ${user.last_name || ''}` : user?.work_email || 'Logged User'}
+                </p>
+                <span className="text-[10px] text-blue-700 font-semibold block truncate">
+                  {user?.role || 'Staff'}
+                </span>
+              </div>
             </div>
-            {sidebarOpen && (
-              <button
-                onClick={logout}
-                className="text-slate-400 hover:text-rose-400 p-2 rounded-xl hover:bg-white/10 transition-colors"
-                title="Logout"
-              >
-                <LogOut size={18} />
-              </button>
-            )}
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+              title="Sign Out"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Drawer Backdrop & Sidebar */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex">
-          <div className="w-72 bg-slate-900 border-r border-white/15 h-full flex flex-col p-4">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center font-black text-white text-base">360</div>
-                <span className="font-extrabold text-base text-white">PEOPLEPAY<span className="text-sky-400">360</span></span>
+        <div
+          className="fixed inset-0 bg-slate-900/40 z-40 md:hidden backdrop-blur-xs"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            className="w-72 max-w-[85vw] h-full bg-white border-r border-slate-200 flex flex-col shadow-2xl p-4 z-50 animate-in slide-in-from-left duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-xs">
+                  360
+                </div>
+                <span className="font-bold text-slate-900 font-heading">PEOPLEPAY360</span>
               </div>
-              <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-white p-1">
-                <X size={20} />
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X size={18} />
               </button>
             </div>
-            <nav className="flex-1 overflow-y-auto py-4 space-y-4">
-              {navGroups.map((group, idx) => {
-                const visibleItems = group.items.filter((item) => item.visible);
-                if (visibleItems.length === 0) return null;
-                return (
-                  <div key={idx} className="space-y-1">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2">{group.title}</p>
-                    {visibleItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/10"
-                        >
-                          <Icon size={18} />
-                          <span>{item.label}</span>
-                        </NavLink>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+
+            <nav className="flex-1 overflow-y-auto pr-1">
+              {renderNavLinks(() => setMobileMenuOpen(false))}
             </nav>
-            <button onClick={logout} className="w-full flex items-center justify-center gap-2 btn-danger btn-sm">
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
+
+            <div className="pt-4 border-t border-slate-200 mt-4">
+              <button
+                onClick={logout}
+                className="w-full btn-secondary text-xs flex items-center justify-center gap-2 text-rose-600 hover:bg-rose-50 hover:border-rose-200"
+              >
+                <LogOut size={15} />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navbar */}
-<<<<<<< HEAD
-        <header className="h-16 px-6 bg-slate-900/60 border-b border-white/10 backdrop-blur-md flex items-center justify-between z-20 shrink-0">
-          {/* Breadcrumbs or Title */}
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span className="font-semibold text-slate-200">PeoplePay360</span>
-            <ChevronRight size={14} className="text-slate-600" />
-            {location.pathname.startsWith('/time-off/types') ? (
-              <>
-                <Link to="/time-off/requests" className="hover:text-slate-200 transition-colors">
-                  Time Off
-                </Link>
-                <ChevronRight size={14} className="text-slate-600" />
-                <span className="text-sky-400 font-medium">Time Off Types</span>
-              </>
-            ) : location.pathname.startsWith('/time-off') ? (
-              <>
-                <Link to="/time-off/requests" className="hover:text-slate-200 transition-colors">
-                  Time Off
-                </Link>
-                <ChevronRight size={14} className="text-slate-600" />
-                <span className="text-sky-400 font-medium">Requests</span>
-              </>
-            ) : (
-              <span className="text-sky-400 font-medium capitalize">
-                {location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
-              </span>
-            )}
-=======
-        <header className="h-16 px-4 sm:px-6 bg-slate-900/70 border-b border-white/10 backdrop-blur-md flex items-center justify-between z-20 shrink-0">
-          <div className="flex items-center gap-3">
+      {/* Main Workspace Frame */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Top Header Bar */}
+        <header className="h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex items-center justify-between z-20 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden text-slate-300 hover:text-white p-2 rounded-xl bg-white/5"
+              className="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              title="Open Navigation"
             >
               <Menu size={20} />
             </button>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <span className="font-semibold text-slate-200 hidden sm:inline">PeoplePay360</span>
-              <ChevronRight size={14} className="text-slate-600 hidden sm:inline" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-100">{getPageTitle()}</h2>
+
+            {/* Breadcrumb Path */}
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 truncate">
+              <span className="font-semibold text-slate-800 hidden sm:inline font-heading">PeoplePay360</span>
+              <ChevronRight size={14} className="text-slate-400 shrink-0 hidden sm:inline" />
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate font-heading">{getPageTitle()}</h2>
             </div>
->>>>>>> b2ea854 (Update frontend UI and add Postman collection)
           </div>
 
-          {/* Right Action Bar */}
-          <div className="flex items-center gap-3">
-            {/* Persona Switcher Dropdown */}
-            <div className="relative">
+          {/* Right Header Utilities */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            {/* Ask AI Trigger Button */}
+            <button
+              onClick={() => setAiDrawerOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold transition-colors shadow-2xs"
+            >
+              <Sparkles size={14} className="text-blue-600" />
+              <span>Ask PeoplePay AI</span>
+            </button>
+
+            {/* Notifications Menu */}
+            <div className="relative" ref={notifMenuRef}>
               <button
-                onClick={() => setPersonaMenuOpen(!personaMenuOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm font-medium text-slate-200 transition-all"
+                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+                className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors border border-slate-200"
+                title="Notifications"
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-slate-400 hidden sm:inline">Role:</span>
-                <span className="text-sky-400 font-bold">{user?.role}</span>
-                <ChevronDown size={16} className="text-slate-400" />
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-white font-bold text-[10px] flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
 
-              {personaMenuOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <p className="text-[11px] font-bold text-slate-400 px-3 py-1.5 uppercase tracking-wider">Switch Role Persona</p>
-                  <div className="space-y-1 mt-1">
-                    {personas.map((p) => (
-                      <button
-                        key={p.role}
-                        onClick={() => handlePersonaSwitch(p.role)}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center justify-between transition-colors ${
-                          user?.role === p.role ? 'bg-sky-600 text-white font-bold' : 'hover:bg-white/5 text-slate-300'
-                        }`}
-                      >
-                        <div>
-                          <div className="font-semibold text-sm">{p.name}</div>
-                          <div className="text-[11px] opacity-75">{p.email}</div>
-                        </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-lg bg-black/40 text-white font-bold">
-                          {p.role}
+              {notifMenuOpen && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-88 bg-white border border-slate-200 rounded-xl shadow-lg p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-slate-900 font-heading">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-100">
+                          {unreadCount} new
                         </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllRead}
+                        className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1 font-semibold transition-colors"
+                      >
+                        <CheckCheck size={13} />
+                        <span>Mark all read</span>
                       </button>
-                    ))}
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-6 text-slate-400 text-xs font-medium">
+                        No notifications yet.
+                      </div>
+                    ) : (
+                      notifications.slice(0, 8).map((n) => (
+                        <div
+                          key={n.id}
+                          onClick={() => !n.is_read && markRead(n.id)}
+                          className={`p-2.5 rounded-lg border text-xs transition-all cursor-pointer ${
+                            n.is_read
+                              ? 'bg-white border-slate-100 text-slate-500'
+                              : 'bg-blue-50/50 border-blue-100 text-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between font-bold mb-0.5">
+                            <span className="truncate text-slate-900">{n.title}</span>
+                            {!n.is_read && (
+                              <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-slate-600 text-[11px] leading-relaxed line-clamp-2">{n.message}</p>
+                          <span className="text-[10px] text-slate-400 mt-1 block">
+                            {new Date(n.created_at).toLocaleDateString()} • {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* AI Assistant Button */}
-            <button
-              onClick={() => setAiDrawerOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-semibold shadow-md shadow-sky-600/25 transition-all"
-            >
-              <Sparkles size={16} />
-              <span className="hidden sm:inline">Ask AI</span>
-            </button>
+            {/* Quick Demo Persona Switcher */}
+            <div className="relative" ref={personaMenuRef}>
+              <button
+                onClick={() => setPersonaMenuOpen(!personaMenuOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors shadow-2xs"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-slate-400 hidden sm:inline">Role:</span>
+                <span className="text-blue-700 font-bold">{user?.role || 'Guest'}</span>
+                <ChevronDown size={14} className="text-slate-400" />
+              </button>
+
+              {personaMenuOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-2.5 py-1.5 border-b border-slate-100 mb-1">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-heading">
+                      Switch Demo Persona
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Test role-based access & permissions</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    {personas.map((p) => {
+                      const isCurrent = user?.role === p.role;
+                      return (
+                        <button
+                          key={p.role}
+                          onClick={() => handlePersonaSwitch(p.role)}
+                          className={`w-full text-left px-2.5 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                            isCurrent
+                              ? 'bg-blue-50 text-blue-700 font-bold'
+                              : 'hover:bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          <div>
+                            <div className="font-semibold text-slate-900">{p.name}</div>
+                            <div className="text-[11px] text-slate-400">{p.email}</div>
+                          </div>
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase ${
+                              isCurrent ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            {p.role}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
-        {/* Page Viewport */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
-          <Outlet />
+        {/* Content Body */}
+        <main className="flex-1 overflow-y-auto p-5 sm:p-7 lg:p-8 bg-slate-50">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
 
       {/* AI Assistant Drawer */}
-      <AskPeoplePayAI isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
+      <AskPeoplePayAI
+        isOpen={aiDrawerOpen}
+        onClose={() => setAiDrawerOpen(false)}
+      />
     </div>
   );
 }

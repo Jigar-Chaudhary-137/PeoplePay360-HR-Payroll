@@ -87,23 +87,23 @@ export function UserManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
             User Accounts & RBAC
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
               {users.length} Accounts
             </span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Role assignments, employee record linkage, and authentication status
           </p>
         </div>
 
-        <button onClick={handleOpenCreate} className="btn-primary text-xs">
-          <UserPlus size={15} />
+        <button onClick={handleOpenCreate} className="btn-primary text-sm self-start sm:self-auto">
+          <UserPlus size={16} />
           <span>New User Account</span>
         </button>
       </div>
@@ -112,8 +112,8 @@ export function UserManagement() {
       {loading ? (
         <LoadingSpinner text="Loading user directory..." />
       ) : (
-        <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="card overflow-hidden">
+          <div className="custom-table-container">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -129,30 +129,32 @@ export function UserManagement() {
                 {users.map((u) => (
                   <tr key={u.id}>
                     <td>
-                      <span className="font-bold text-slate-100">{u.work_email}</span>
-                      <span className="text-[10px] text-slate-500 block">UID: #{u.id}</span>
+                      <span className="font-semibold text-slate-900">{u.work_email}</span>
+                      <span className="text-[11px] text-slate-400 block font-mono">UID: #{u.id}</span>
                     </td>
                     <td>
                       {u.first_name ? (
                         <div>
-                          <span className="font-semibold text-slate-200">{u.first_name} {u.last_name}</span>
-                          <span className="text-[10px] text-sky-400 block font-mono">{u.emp_code}</span>
+                          <span className="font-medium text-slate-800">{u.first_name} {u.last_name}</span>
+                          <span className="text-[11px] text-blue-600 block font-mono">{u.emp_code}</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-500 italic">No Employee Linked</span>
+                        <span className="text-xs text-slate-400 italic">No Employee Linked</span>
                       )}
                     </td>
-                    <td className="text-xs text-slate-300">
+                    <td className="text-xs text-slate-600 font-medium">
                       {u.department_name ? `${u.department_name} • ${u.job_title || ''}` : '-'}
                     </td>
                     <td>
-                      <span className="font-bold text-xs px-2.5 py-1 rounded-lg bg-sky-950 text-sky-300 border border-sky-500/30">
+                      <span className="font-semibold text-xs px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
                         {u.role}
                       </span>
                     </td>
                     <td>
-                      <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
-                        u.account_status === 'Active' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
+                        u.account_status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
                       }`}>
                         {u.account_status}
                       </span>
@@ -160,7 +162,7 @@ export function UserManagement() {
                     <td className="text-right">
                       <button
                         onClick={() => handleOpenEdit(u)}
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-sky-400 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors"
                         title="Edit User Role / Status"
                       >
                         <Edit size={16} />
@@ -210,7 +212,7 @@ export function UserManagement() {
             <div>
               <label className="form-label">Assigned Role *</label>
               <select
-                className="form-select font-semibold"
+                className="form-select font-medium"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
@@ -250,7 +252,7 @@ export function UserManagement() {
             </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button type="button" onClick={() => setModalOpen(false)} className="btn-secondary">
               Cancel
             </button>

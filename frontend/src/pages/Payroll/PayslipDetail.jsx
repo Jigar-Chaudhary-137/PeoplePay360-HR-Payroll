@@ -55,10 +55,10 @@ export function PayslipDetail() {
   const deductions = payslip.deductions || [];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto pb-6">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
-        <Link to="/payslips" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+        <Link to="/payslips" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors">
           <ArrowLeft size={14} />
           <span>Back to Payslips</span>
         </Link>
@@ -68,9 +68,9 @@ export function PayslipDetail() {
             <button
               onClick={handleSendEmail}
               disabled={emailing}
-              className="btn-secondary text-xs"
+              className="btn-secondary text-xs px-3 py-1.5"
             >
-              <Send size={14} />
+              <Send size={13} />
               <span>{emailing ? 'Dispatching...' : payslip.email_sent ? 'Re-send Email' : 'Email Payslip'}</span>
             </button>
           )}
@@ -79,93 +79,93 @@ export function PayslipDetail() {
             href={payslipAPI.getPDFUrl(id)}
             target="_blank"
             rel="noreferrer"
-            className="btn-primary text-xs"
+            className="btn-primary text-xs px-3.5 py-1.5"
           >
-            <Download size={14} />
-            <span>Download Official PDF</span>
+            <Download size={13} />
+            <span>Download PDF</span>
           </a>
         </div>
       </div>
 
       {/* Main Document / Payslip View Card */}
-      <div className="glass-card p-8 space-y-6 bg-slate-900/90 border border-white/15 shadow-2xl relative">
+      <div className="card p-8 space-y-6 bg-white border border-slate-200 shadow-sm relative">
         {/* Company Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-sky-500/20">
+            <div className="w-12 h-12 rounded-xl bg-blue-600 text-white font-extrabold text-xl flex items-center justify-center shadow-xs font-heading">
               360
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-100 tracking-tight">PEOPLEPAY360 GLOBAL</h2>
-              <p className="text-xs text-slate-400">Intelligent HR & Payroll Operations Platform</p>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight font-heading">PEOPLEPAY360 GLOBAL</h2>
+              <p className="text-xs text-slate-500 font-medium">Intelligent HR & Payroll Operations Platform</p>
             </div>
           </div>
 
           <div className="text-right">
-            <h3 className="text-lg font-black text-sky-400 tracking-wide">PAYSLIP</h3>
-            <p className="text-xs font-semibold text-slate-300">Period: {payslip.period_month}</p>
+            <h3 className="text-lg font-extrabold text-blue-600 tracking-wide font-heading">PAYSLIP</h3>
+            <p className="text-xs font-semibold text-slate-700">Period: {payslip.period_month}</p>
             <p className="text-[11px] font-mono text-slate-400">Slip No: {payslip.payslip_code}</p>
           </div>
         </div>
 
         {/* Employee Summary Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-white/5 border border-white/5 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">Employee Name:</span>
-              <span className="font-bold text-slate-100">{payslip.first_name} {payslip.last_name}</span>
+              <span className="text-slate-500 font-medium">Employee Name:</span>
+              <span className="font-bold text-slate-900 font-heading">{payslip.first_name} {payslip.last_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">Employee Code:</span>
-              <span className="font-mono text-slate-200">{payslip.emp_code}</span>
+              <span className="text-slate-500 font-medium">Employee Code:</span>
+              <span className="font-mono text-slate-800 font-medium">{payslip.emp_code}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">Department:</span>
-              <span className="text-slate-200 font-semibold">{payslip.department_name}</span>
+              <span className="text-slate-500 font-medium">Department:</span>
+              <span className="text-slate-800 font-semibold">{payslip.department_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">Job Designation:</span>
-              <span className="text-slate-200 font-semibold">{payslip.job_title}</span>
+              <span className="text-slate-500 font-medium">Job Designation:</span>
+              <span className="text-slate-800 font-semibold">{payslip.job_title}</span>
             </div>
           </div>
 
-          <div className="space-y-2 border-t md:border-t-0 md:border-l border-white/5 pt-2 md:pt-0 md:pl-6">
+          <div className="space-y-2 border-t md:border-t-0 md:border-l border-slate-200 pt-2 md:pt-0 md:pl-6">
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">Bank Name:</span>
-              <span className="text-slate-200">{payslip.bank_name || 'N/A'}</span>
+              <span className="text-slate-500 font-medium">Bank Name:</span>
+              <span className="text-slate-800 font-medium">{payslip.bank_name || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">Bank Account No:</span>
-              <span className="font-mono text-slate-200">{payslip.bank_account_no || 'N/A'}</span>
+              <span className="text-slate-500 font-medium">Bank Account No:</span>
+              <span className="font-mono text-slate-800">{payslip.bank_account_no || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">IFSC Code:</span>
-              <span className="font-mono text-slate-200">{payslip.bank_ifsc || 'N/A'}</span>
+              <span className="text-slate-500 font-medium">IFSC Code:</span>
+              <span className="font-mono text-slate-800">{payslip.bank_ifsc || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400 font-medium">PAN / Tax ID:</span>
-              <span className="font-mono text-slate-200">{payslip.pan_number || 'N/A'}</span>
+              <span className="text-slate-500 font-medium">PAN / Tax ID:</span>
+              <span className="font-mono text-slate-800">{payslip.pan_number || 'N/A'}</span>
             </div>
           </div>
         </div>
 
         {/* Attendance Days Strip */}
-        <div className="flex items-center justify-around p-3 rounded-xl bg-slate-950 border border-white/10 text-xs font-semibold">
+        <div className="flex items-center justify-around p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
           <div>
-            <span className="text-slate-400">Total Calendar Days: </span>
-            <span className="text-slate-100 font-bold">{payslip.total_days}d</span>
+            <span className="text-slate-500 font-normal">Total Calendar: </span>
+            <span className="text-slate-900 font-bold">{payslip.total_days}d</span>
           </div>
           <div>
-            <span className="text-slate-400">Worked Days: </span>
-            <span className="text-sky-400 font-bold">{payslip.worked_days}d</span>
+            <span className="text-slate-500 font-normal">Worked Days: </span>
+            <span className="text-blue-600 font-bold">{payslip.worked_days}d</span>
           </div>
           <div>
-            <span className="text-slate-400">Paid Leaves: </span>
-            <span className="text-emerald-400 font-bold">{payslip.paid_leave_days}d</span>
+            <span className="text-slate-500 font-normal">Paid Leaves: </span>
+            <span className="text-emerald-700 font-bold">{payslip.paid_leave_days}d</span>
           </div>
           <div>
-            <span className="text-slate-400">Unpaid Absences (LOP): </span>
-            <span className="text-rose-400 font-bold">{payslip.unpaid_leave_days}d</span>
+            <span className="text-slate-500 font-normal">Unpaid (LOP): </span>
+            <span className="text-rose-700 font-bold">{payslip.unpaid_leave_days}d</span>
           </div>
         </div>
 
@@ -173,28 +173,28 @@ export function PayslipDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Earnings Column */}
           <div className="space-y-3">
-            <div className="p-2.5 rounded-lg bg-sky-950/60 border border-sky-500/30 flex items-center justify-between text-xs font-bold text-sky-300 uppercase tracking-wider">
+            <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between text-xs font-bold text-blue-800 uppercase tracking-wider font-heading">
               <span>Earnings Component</span>
               <span>Amount (₹)</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {earnings.map((e) => (
-                <div key={e.id} className="flex items-center justify-between text-xs py-1 px-2 border-b border-white/5">
+                <div key={e.id} className="flex items-center justify-between text-xs py-1 px-2 border-b border-slate-100">
                   <div>
-                    <span className="font-semibold text-slate-200">{e.rule_name}</span>
+                    <span className="font-medium text-slate-800">{e.rule_name}</span>
                     <span className="text-[10px] text-slate-400 block font-mono">{e.rule_code}</span>
                   </div>
-                  <span className="font-bold text-slate-100 text-sm">
+                  <span className="font-bold text-slate-900 text-sm">
                     ₹{Number(e.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="p-3 rounded-xl bg-white/5 flex items-center justify-between text-xs font-bold pt-3 border-t border-white/10">
-              <span className="text-slate-300">Total Gross Earnings</span>
-              <span className="text-base text-slate-100 font-black">
+            <div className="p-3 rounded-xl bg-slate-50 flex items-center justify-between text-xs font-bold pt-3 border-t border-slate-200">
+              <span className="text-slate-700 font-heading">Total Gross Earnings</span>
+              <span className="text-base text-slate-900 font-extrabold font-heading">
                 ₹{Number(payslip.gross_salary).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -202,28 +202,28 @@ export function PayslipDetail() {
 
           {/* Deductions Column */}
           <div className="space-y-3">
-            <div className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/30 flex items-center justify-between text-xs font-bold text-rose-300 uppercase tracking-wider">
+            <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-between text-xs font-bold text-rose-800 uppercase tracking-wider font-heading">
               <span>Deductions Component</span>
               <span>Amount (₹)</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {deductions.map((d) => (
-                <div key={d.id} className="flex items-center justify-between text-xs py-1 px-2 border-b border-white/5">
+                <div key={d.id} className="flex items-center justify-between text-xs py-1 px-2 border-b border-slate-100">
                   <div>
-                    <span className="font-semibold text-slate-200">{d.rule_name}</span>
+                    <span className="font-medium text-slate-800">{d.rule_name}</span>
                     <span className="text-[10px] text-slate-400 block font-mono">{d.rule_code}</span>
                   </div>
-                  <span className="font-bold text-rose-400 text-sm">
+                  <span className="font-bold text-rose-700 text-sm">
                     ₹{Number(d.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="p-3 rounded-xl bg-white/5 flex items-center justify-between text-xs font-bold pt-3 border-t border-white/10">
-              <span className="text-rose-400">Total Deductions</span>
-              <span className="text-base text-rose-400 font-black">
+            <div className="p-3 rounded-xl bg-slate-50 flex items-center justify-between text-xs font-bold pt-3 border-t border-slate-200">
+              <span className="text-rose-700 font-heading">Total Deductions</span>
+              <span className="text-base text-rose-700 font-extrabold font-heading">
                 ₹{Number(payslip.total_deductions).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -231,25 +231,25 @@ export function PayslipDetail() {
         </div>
 
         {/* Net Payable Highlight Card */}
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-950 via-slate-900 to-indigo-950 border border-sky-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+        <div className="p-6 rounded-2xl bg-blue-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div>
-            <span className="text-xs uppercase font-extrabold tracking-widest text-sky-400">Net Payable Salary</span>
-            <p className="text-xs text-slate-400 mt-0.5">Calculated as Gross Salary minus Statutory and Rule Deductions</p>
+            <span className="text-xs uppercase font-extrabold tracking-widest text-blue-100 font-heading">Net Payable Salary</span>
+            <p className="text-xs text-blue-100/80 mt-0.5">Calculated as Gross Salary minus Statutory and Rule Deductions</p>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-black text-white text-gradient">
+            <h2 className="text-3xl font-extrabold text-white font-heading">
               ₹ {Number(payslip.net_salary).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </h2>
-            <span className="text-[10px] text-emerald-400 font-semibold block">
-              {payslip.status === 'paid' ? 'Disbursed to Bank Account' : 'Ready for Disbursement'}
+            <span className="text-xs text-emerald-300 font-semibold block mt-0.5">
+              {payslip.status === 'paid' ? '✓ Disbursed to Bank Account' : 'Ready for Disbursement'}
             </span>
           </div>
         </div>
 
         {/* Email Dispatched Status Badge */}
         {payslip.email_sent && (
-          <div className="text-center text-xs text-emerald-400 flex items-center justify-center gap-1.5 pt-2">
-            <CheckCircle2 size={14} />
+          <div className="text-center text-xs text-emerald-700 flex items-center justify-center gap-1.5 pt-2 font-medium">
+            <CheckCircle2 size={14} className="text-emerald-600" />
             <span>Official payslip PDF was delivered to <strong>{payslip.email}</strong> on {payslip.email_sent_at?.split('T')[0]}</span>
           </div>
         )}
