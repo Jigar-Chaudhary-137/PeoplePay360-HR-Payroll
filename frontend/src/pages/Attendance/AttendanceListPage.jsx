@@ -2,36 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Plus, Search, Filter, Calendar, User, 
-  RotateCcw, CheckCircle2, Clock, AlertTriangle, UserX, ArrowLeft,
-  MapPin, ShieldCheck
+  RotateCcw, CheckCircle2, Clock, AlertTriangle, UserX, ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../context/NotificationContext';
 import { attendanceService } from '../../services/attendanceService';
-import { employeeAPI } from '../../services/api';
+import { MOCK_EMPLOYEE_LIST } from '../../data/attendanceMockData';
 import AttendanceTable from '../../components/attendance/AttendanceTable';
 import ManualCorrectionModal from '../../components/attendance/ManualCorrectionModal';
 import QuickCheckInWidget from '../../components/attendance/QuickCheckInWidget';
 import { StatCard } from '../../components/common/CommonUI';
 
-/**
- * Enterprise Attendance List Page (/attendance & /employees/:employeeId/attendance)
- */
 export function AttendanceListPage() {
   const { employeeId } = useParams();
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const { showToast } = useNotify();
 
-  // Filters State
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(employeeId || '');
   const [selectedStatus, setSelectedStatus] = useState('All');
 
-  // Data & Modal State
   const [records, setRecords] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -41,13 +34,6 @@ export function AttendanceListPage() {
       setSelectedEmployee(employeeId);
     }
   }, [employeeId]);
-
-  // Load real employees for dropdown
-  useEffect(() => {
-    employeeAPI.getAll()
-      .then((res) => setEmployees(res.data || []))
-      .catch(() => {});
-  }, []);
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -59,7 +45,7 @@ export function AttendanceListPage() {
         status: selectedStatus
       });
       if (res.success) {
-        setRecords(res.data || []);
+        setRecords(res.data);
       } else {
         showToast(res.error || 'Failed to load attendance records', 'error');
       }
@@ -88,46 +74,47 @@ export function AttendanceListPage() {
   const canManageAttendance = hasRole('Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User');
 
   const totalCount = records.length;
-  const presentCount = records.filter((r) => (r.status || '').toLowerCase() === 'present').length;
-  const lateCount = records.filter((r) => (r.status || '').toLowerCase() === 'late').length;
-  const absentCount = records.filter((r) => (r.status || '').toLowerCase() === 'absent').length;
+  const presentCount = records.filter((r) => r.status === 'Present').length;
+  const lateCount = records.filter((r) => r.status === 'Late').length;
+  const absentCount = records.filter((r) => r.status === 'Absent').length;
 
-  const currentFilteredEmployee = employees.find((e) => String(e.id) === String(selectedEmployee));
+  const currentFilteredEmployee = MOCK_EMPLOYEE_LIST.find((e) => String(e.id) === String(selectedEmployee));
 
   return (
-    <div className="space-y-6 pb-6">
-      {/* Context Banner if filtering for specific employee */}
+    <div className="space-y-6">
+      {/* Context Banner */}
       {employeeId && currentFilteredEmployee && (
-        <div className="card p-4 bg-blue-50/50 border-blue-200 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2.5 text-sm text-blue-900 font-medium">
-            <User size={18} className="text-blue-600" />
+        <div className="glass-card p-4 flex items-center justify-between border-sky-500/30 bg-sky-500/10">
+          <div className="flex items-center gap-3 text-sm text-sky-300">
+            <User size={18} className="text-sky-400" />
             <span>
-              Showing attendance history for <strong className="text-slate-900 font-bold">{currentFilteredEmployee.first_name} {currentFilteredEmployee.last_name}</strong> ({currentFilteredEmployee.emp_code})
+              Showing attendance logs for <strong className="text-white">{currentFilteredEmployee.name}</strong> ({currentFilteredEmployee.code})
             </span>
           </div>
           <Link
             to="/attendance"
-            className="text-xs font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1.5 transition-colors"
+            className="text-xs font-bold text-sky-400 hover:text-sky-300 inline-flex items-center gap-1.5"
           >
             <ArrowLeft size={14} />
-            <span>All Employees</span>
+            <span>View All Staff</span>
           </Link>
         </div>
       )}
 
+      {/* Quick Punch Widget */}
+      <QuickCheckInWidget onSuccess={fetchAttendance} />
+
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
-              Attendance & Time Tracking
-            </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+          <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
+            Attendance Logs &amp; GPS Verification
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
               {totalCount} Logs
             </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Real-time biometric punch records, working hours, and GPS location verification
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Real-time check-in, check-out, geofencing verification, and worked hours computation
           </p>
         </div>
 
@@ -138,146 +125,90 @@ export function AttendanceListPage() {
               setEditingRecord(null);
               setIsModalOpen(true);
             }}
-            className="btn-primary text-xs px-3.5 py-2 self-start sm:self-auto"
+            className="btn-primary text-xs"
           >
-            <Plus size={15} />
+            <Plus size={16} />
             <span>Manual Entry</span>
           </button>
         )}
       </div>
 
-      {/* Quick Check-In Widget (Live punch) */}
-      <QuickCheckInWidget onSuccess={fetchAttendance} />
-
       {/* Quick Stat Highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Logs"
-          value={totalCount}
-          subtitle="Filtered window"
-          icon={Clock}
-          color="sky"
-        />
-        <StatCard
-          title="Present On-Duty"
-          value={presentCount}
-          subtitle="Punctual check-ins"
-          icon={CheckCircle2}
-          color="emerald"
-        />
-        <StatCard
-          title="Late Arrivals"
-          value={lateCount}
-          subtitle="Grace period exceeded"
-          icon={AlertTriangle}
-          color="amber"
-        />
-        <StatCard
-          title="Recorded Absences"
-          value={absentCount}
-          subtitle="Unexcused / pending"
-          icon={UserX}
-          color="rose"
-        />
+        <StatCard title="Total Logs" value={totalCount} icon={Clock} color="sky" />
+        <StatCard title="Present" value={presentCount} icon={CheckCircle2} color="emerald" />
+        <StatCard title="Late Arrivals" value={lateCount} icon={AlertTriangle} color="amber" />
+        <StatCard title="Absent" value={absentCount} icon={UserX} color="rose" />
       </div>
 
-      {/* Filters Bar Card */}
-      <div className="card p-4 space-y-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 flex-wrap">
-          {/* Search Input */}
+      {/* Main Table Card & Filters */}
+      <div className="glass-card p-5 space-y-4">
+        {/* Filters Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 pb-4 border-b border-white/10">
           <div className="relative w-full md:w-80">
             <input
               type="text"
-              placeholder="Search by employee name or code..."
+              placeholder="Search employee or notes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="form-input pl-9 text-xs py-2"
+              className="form-input pl-10 text-xs"
             />
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
           </div>
 
-          {/* Filter Dropdowns */}
-          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-            {/* Date Filter */}
-            <div className="flex items-center gap-2">
-              <Calendar size={15} className="text-slate-400" />
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="form-input text-xs py-2 px-2.5 w-36"
-              />
-            </div>
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="form-input text-xs w-auto"
+            />
 
-            {/* Employee Filter */}
             {!employeeId && (
-              <div className="flex items-center gap-2">
-                <User size={15} className="text-slate-400" />
-                <select
-                  value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
-                  className="form-select text-xs py-2"
-                >
-                  <option value="">All Employees</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.first_name} {emp.last_name} ({emp.emp_code})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+                className="form-select text-xs w-auto"
+              >
+                <option value="">All Employees</option>
+                {MOCK_EMPLOYEE_LIST.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} ({emp.code})
+                  </option>
+                ))}
+              </select>
             )}
 
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <Filter size={15} className="text-slate-400" />
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="form-select text-xs py-2"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Present">Present</option>
-                <option value="Late">Late</option>
-                <option value="Half Day">Half Day</option>
-                <option value="Absent">Absent</option>
-              </select>
-            </div>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="form-select text-xs w-auto"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Present">Present</option>
+              <option value="Late">Late</option>
+              <option value="Half Day">Half Day</option>
+              <option value="Absent">Absent</option>
+            </select>
 
-            {/* Reset Filter Button */}
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="btn-secondary text-xs px-2.5 py-2 flex items-center gap-1.5"
+                className="btn-secondary text-xs"
               >
-                <RotateCcw size={13} />
+                <RotateCcw size={14} />
                 <span>Reset</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Table Container */}
-        <div className="custom-table-container">
-          <AttendanceTable
-            records={records}
-            loading={loading}
-            onRowClick={(row) => navigate(`/attendance/${row.id}`)}
-          />
-        </div>
-
-        {/* Footer Summary */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-          <span>Displaying <strong>{records.length}</strong> attendance audit records</span>
-          <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
-            <ShieldCheck size={14} className="text-emerald-600" />
-            Biometric & GPS Tracking Active
-          </span>
-        </div>
+        {/* Table Component */}
+        <AttendanceTable records={records} loading={loading} />
       </div>
 
-      {/* Correction Modal */}
+      {/* Manual Correction Modal */}
       <ManualCorrectionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
