@@ -74,24 +74,79 @@ export default function App() {
               }
             >
               <Route index element={<HomeRedirect />} />
-              <Route path="dashboard" element={<PayrollDashboard />} />
-              <Route path="employees" element={<EmployeeList />} />
-              <Route path="employees/:id" element={<EmployeeDetail />} />
-              <Route path="contracts" element={<ContractList />} />
-              <Route path="schedules" element={<ScheduleList />} />
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User']}>
+                    <PayrollDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employees"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User']}>
+                    <EmployeeList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employees/:id"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User']}>
+                    <EmployeeDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="contracts"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User']}>
+                    <ContractList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="schedules"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Manager', 'HR Payroll Admin']}>
+                    <ScheduleList />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="attendance" element={<AttendanceList />} />
               <Route path="attendance/:attendanceId" element={<AttendanceDetail />} />
               <Route path="employees/:employeeId/attendance" element={<AttendanceList />} />
               <Route path="time-off" element={<TimeOffRequests />} />
               <Route path="time-off/requests" element={<TimeOffRequests />} />
-              <Route path="time-off/requests/:requestId" element={<TimeOffRequestDetail />} />
               <Route path="time-off/types" element={<TimeOffTypes />} />
               <Route path="time-off/types/:typeId" element={<TimeOffTypeDetail />} />
-              <Route path="payruns" element={<PayrunList />} />
-              <Route path="payruns/:id" element={<PayrunDetail />} />
+              <Route
+                path="payruns"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Payroll Admin', 'HR Payroll User']}>
+                    <PayrunList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="payruns/:id"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Payroll Admin', 'HR Payroll User']}>
+                    <PayrunDetail />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="payslips" element={<PayslipList />} />
               <Route path="payslips/:id" element={<PayslipDetail />} />
-              <Route path="salary-config" element={<SalaryStructures />} />
+              <Route
+                path="salary-config"
+                element={
+                  <ProtectedRoute allowedRoles={['Admin', 'HR Payroll Admin']}>
+                    <SalaryStructures />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="self-service" element={<EmployeePortal />} />
               <Route
                 path="admin/users"

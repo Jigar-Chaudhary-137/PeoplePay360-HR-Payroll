@@ -15,9 +15,10 @@ export function AuthProvider({ children }) {
     if (token) {
       authAPI.getMe()
         .then((res) => {
-          if (res.user) {
-            setUser(res.user);
-            localStorage.setItem('user', JSON.stringify(res.user));
+          const profile = res?.user || res?.data;
+          if (profile) {
+            setUser(profile);
+            localStorage.setItem('user', JSON.stringify(profile));
           }
         })
         .catch(() => {
@@ -31,11 +32,16 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await authAPI.login({ email, password });
-    if (res.token) {
-      setToken(res.token);
-      setUser(res.user);
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('user', JSON.stringify(res.user));
+    const receivedToken = res?.token || res?.data?.token;
+    const receivedUser = res?.user || res?.data?.user;
+
+    if (receivedToken) {
+      setToken(receivedToken);
+      setUser(receivedUser || null);
+      localStorage.setItem('token', receivedToken);
+      if (receivedUser) {
+        localStorage.setItem('user', JSON.stringify(receivedUser));
+      }
     }
     return res;
   };
@@ -47,21 +53,21 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
   };
 
-  // Instant persona role switcher for hackathon judges & demos
+  // Instant persona role switcher for demo accounts
   const switchRole = async (roleName) => {
-    try {
-      const res = await authAPI.switchDemoRole(roleName);
-      if (res.token) {
-        setToken(res.token);
-        setUser(res.user);
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user));
-      }
-      return res;
-    } catch (err) {
-      console.error('Failed to switch demo persona:', err);
-      throw err;
+    const roleEmailMap = {
+      'Admin': 'admin@peoplepay360.com',
+      'HR Manager': 'priya.patel@peoplepay360.com',
+      'HR Payroll Admin': 'amit.singh@peoplepay360.com',
+      'HR Payroll User': 'neha.gupta@peoplepay360.com',
+      'Employee': 'rahul.sharma@peoplepay360.com'
+    };
+
+    const targetEmail = roleEmailMap[roleName];
+    if (targetEmail) {
+      return await login(targetEmail, 'Password@123');
     }
+    throw new Error(`Demo account for role "${roleName}" is not configured.`);
   };
 
   // Permission helpers

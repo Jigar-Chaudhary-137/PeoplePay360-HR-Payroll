@@ -101,24 +101,25 @@ export function Login() {
 
     try {
       const res = await login(formData.email.trim(), formData.password);
+      const token = res?.token || res?.data?.token;
+      const user = res?.user || res?.data?.user;
 
-      if (res && (res.user || res.token || res.success)) {
-        const user = res.user || res.data?.user;
+      if (token && user) {
         const role = user?.role || user?.role_name || 'Employee';
 
         setServerMessage({
           type: 'success',
-          message: `Signed in successfully! Welcome back, ${user?.first_name || 'User'}.`
+          message: `Signed in successfully! Welcome back, ${user?.name || user?.first_name || 'User'}.`
         });
 
-        // Route HR/Payroll roles to /dashboard and standard employees to /self-service or /dashboard
+        // Route HR/Payroll roles to /dashboard and standard employees to /self-service
         setTimeout(() => {
           if (role === 'Employee') {
             navigate('/self-service', { replace: true });
           } else {
             navigate('/dashboard', { replace: true });
           }
-        }, 500);
+        }, 300);
       } else {
         const errMsg = res?.error || res?.message || 'Invalid email or password. Please try again.';
         
@@ -299,7 +300,36 @@ export function Login() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
             <button
               type="button"
-              onClick={() => handleQuickFill('hr.manager@peoplepay360.com', 'Password@123')}
+              onClick={() => handleQuickFill('admin@peoplepay360.com', 'Password@123')}
+              disabled={isLoading}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: '1px solid #E2E8F0',
+                backgroundColor: '#F8FAFC',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#93C5FD';
+                e.currentTarget.style.backgroundColor = '#EFF6FF';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#E2E8F0';
+                e.currentTarget.style.backgroundColor = '#F8FAFC';
+              }}
+            >
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1E293B' }}>Admin</span>
+              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>admin@...</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickFill('priya.patel@peoplepay360.com', 'Password@123')}
               disabled={isLoading}
               style={{
                 display: 'flex',
@@ -323,7 +353,36 @@ export function Login() {
               }}
             >
               <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1E293B' }}>HR Manager</span>
-              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>hr.manager@...</span>
+              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>priya.patel@...</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickFill('amit.singh@peoplepay360.com', 'Password@123')}
+              disabled={isLoading}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: '1px solid #E2E8F0',
+                backgroundColor: '#F8FAFC',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#93C5FD';
+                e.currentTarget.style.backgroundColor = '#EFF6FF';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#E2E8F0';
+                e.currentTarget.style.backgroundColor = '#F8FAFC';
+              }}
+            >
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1E293B' }}>Payroll Admin</span>
+              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>amit.singh@...</span>
             </button>
 
             <button

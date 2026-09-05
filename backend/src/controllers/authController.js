@@ -77,6 +77,8 @@ async function login(req, res, next) {
           role: user.role_name,
           employee_id: user.employee_id,
           name: user.first_name ? `${user.first_name} ${user.last_name}` : 'Administrator',
+          first_name: user.first_name || (user.role_name === 'Admin' ? 'Admin' : ''),
+          last_name: user.last_name || '',
           employee_code: user.employee_code,
           avatar_url: user.avatar_url
         }
