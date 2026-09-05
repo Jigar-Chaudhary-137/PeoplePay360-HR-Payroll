@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileSpreadsheet, Clock, CalendarOff,
   DollarSign, Sliders, ShieldCheck, UserCheck, LogOut, Sparkles,
@@ -18,6 +18,7 @@ export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const [personaMenuOpen, setPersonaMenuOpen] = useState(false);
+  const [timeOffDropdownOpen, setTimeOffDropdownOpen] = useState(true);
 
   const personas = [
     { role: 'Admin', name: 'Vikram Verma', email: 'admin@peoplepay360.com', badge: 'Full Admin' },
@@ -85,7 +86,11 @@ export function DashboardLayout() {
       to: '/time-off',
       label: 'Time Off & Leaves',
       icon: CalendarOff,
-      visible: true
+      visible: true,
+      subItems: [
+        { to: '/time-off/requests', label: 'Time Off Requests' },
+        { to: '/time-off/types', label: 'Time Off Types' }
+      ]
     },
     // Payroll Ops
     {
@@ -151,13 +156,87 @@ export function DashboardLayout() {
             .filter((item) => item.visible)
             .map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.to || (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
+              const hasSubItems = item.subItems && item.subItems.length > 0;
+              const isPathActive = location.pathname === item.to || (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
+
+              if (hasSubItems) {
+                return (
+                  <div key={item.to} className="space-y-1">
+                    <div
+                      className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        isPathActive
+                          ? 'bg-gradient-to-r from-sky-600 to-sky-500 text-white shadow-md shadow-sky-600/30'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                      }`}
+                    >
+                      <NavLink
+                        to={item.to}
+                        className="flex items-center gap-3 flex-1 min-w-0"
+                        title={!sidebarOpen ? item.label : undefined}
+                      >
+                        <Icon size={19} className="shrink-0" />
+                        {sidebarOpen && <span className="truncate">{item.label}</span>}
+                      </NavLink>
+                      {sidebarOpen && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setTimeOffDropdownOpen(!timeOffDropdownOpen);
+                          }}
+                          className="p-1 rounded-lg hover:bg-black/20 text-white/80 hover:text-white transition-colors ml-1"
+                          title="Toggle Time Off menu"
+                        >
+                          <ChevronDown
+                            size={14}
+                            className={`transition-transform duration-200 ${
+                              timeOffDropdownOpen ? 'rotate-0' : '-rotate-90'
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Submenu Dropdown */}
+                    {sidebarOpen && timeOffDropdownOpen && (
+                      <div className="ml-5 pl-3 border-l border-white/10 space-y-1 py-1">
+                        {item.subItems.map((sub) => {
+                          const isSubActive =
+                            sub.to === '/time-off/requests'
+                              ? location.pathname === '/time-off' || location.pathname.startsWith('/time-off/requests')
+                              : location.pathname.startsWith(sub.to);
+                          return (
+                            <NavLink
+                              key={sub.to}
+                              to={sub.to}
+                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                isSubActive
+                                  ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30'
+                                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  isSubActive ? 'bg-sky-400' : 'bg-slate-500'
+                                }`}
+                              />
+                              <span className="truncate">{sub.label}</span>
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isActive
+                    isPathActive
                       ? 'bg-gradient-to-r from-sky-600 to-sky-500 text-white shadow-md shadow-sky-600/30'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                   }`}
@@ -216,9 +295,27 @@ export function DashboardLayout() {
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <span className="font-semibold text-slate-200">PeoplePay360</span>
             <ChevronRight size={14} className="text-slate-600" />
-            <span className="text-sky-400 font-medium capitalize">
-              {location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
-            </span>
+            {location.pathname.startsWith('/time-off/types') ? (
+              <>
+                <Link to="/time-off/requests" className="hover:text-slate-200 transition-colors">
+                  Time Off
+                </Link>
+                <ChevronRight size={14} className="text-slate-600" />
+                <span className="text-sky-400 font-medium">Time Off Types</span>
+              </>
+            ) : location.pathname.startsWith('/time-off') ? (
+              <>
+                <Link to="/time-off/requests" className="hover:text-slate-200 transition-colors">
+                  Time Off
+                </Link>
+                <ChevronRight size={14} className="text-slate-600" />
+                <span className="text-sky-400 font-medium">Requests</span>
+              </>
+            ) : (
+              <span className="text-sky-400 font-medium capitalize">
+                {location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
+              </span>
+            )}
           </div>
 
           {/* Right Action Bar */}
