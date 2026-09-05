@@ -152,9 +152,32 @@ export function Login() {
     }
   };
 
+  const demoAccounts = [
+    {
+      role: 'Admin',
+      email: 'admin@peoplepay360.com',
+      password: 'Password@123'
+    },
+    {
+      role: 'HR Manager',
+      email: 'priya.patel@peoplepay360.com',
+      password: 'Password@123'
+    },
+    {
+      role: 'Payroll Admin',
+      email: 'amit.singh@peoplepay360.com',
+      password: 'Password@123'
+    },
+    {
+      role: 'Employee',
+      email: 'rahul.sharma@peoplepay360.com',
+      password: 'Password@123'
+    }
+  ];
+
   return (
     <AuthLayout>
-      <div className="glass-card p-8 sm:p-10 shadow-xl border-[#DDD9E8] bg-white text-[#17151F]">
+      <div className="glass-card p-6 sm:p-8 shadow-xl border-[#DDD9E8] bg-white text-[#17151F]">
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#17151F] tracking-tight mb-1">
@@ -241,59 +264,65 @@ export function Login() {
           </Button>
         </form>
 
-        {/* Demo Quick-Fill Access Chips */}
-        <div className="mt-8 pt-6 border-t border-dashed border-[#DDD9E8]">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#625E6E] mb-3">
-            <Sparkles size={14} className="text-[#6C3FF5]" />
-            <span>Quick Demo Access</span>
+        {/* Quick Demo Access Section */}
+        <div className="mt-6 pt-5 border-t border-[#E5E7EB]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5">
+              <Sparkles size={13} className="text-[#6D28D9]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+                Quick Demo Access
+              </span>
+            </div>
+            <span className="text-[10px] font-medium text-[#9CA3AF]">
+              1-Click Auto-Fill
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin@peoplepay360.com', 'Password@123')}
-              disabled={isLoading}
-              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
-            >
-              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">Admin</span>
-              <span className="text-[10px] text-[#625E6E] truncate">admin@...</span>
-            </button>
+          <div className="grid grid-cols-2 gap-3">
+            {demoAccounts.map((demo) => {
+              const isSelected = formData.email.trim().toLowerCase() === demo.email.toLowerCase();
 
-            <button
-              type="button"
-              onClick={() => handleQuickFill('priya.patel@peoplepay360.com', 'Password@123')}
-              disabled={isLoading}
-              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
-            >
-              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">HR Manager</span>
-              <span className="text-[10px] text-[#625E6E] truncate">priya.patel@...</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickFill('amit.singh@peoplepay360.com', 'Password@123')}
-              disabled={isLoading}
-              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
-            >
-              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">Payroll Admin</span>
-              <span className="text-[10px] text-[#625E6E] truncate">amit.singh@...</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickFill('rahul.sharma@peoplepay360.com', 'Password@123')}
-              disabled={isLoading}
-              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
-            >
-              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">Employee</span>
-              <span className="text-[10px] text-[#625E6E] truncate">rahul.sharma@...</span>
-            </button>
+              return (
+                <button
+                  key={demo.role}
+                  type="button"
+                  onClick={() => handleQuickFill(demo.email, demo.password)}
+                  disabled={isLoading}
+                  className={`h-full min-h-[64px] flex flex-col justify-center p-3 rounded-xl border text-left transition-all duration-150 group cursor-pointer select-none shadow-2xs ${
+                    isSelected
+                      ? 'border-[#6D28D9] bg-[#F5F3FF] ring-1 ring-[#6D28D9]/20'
+                      : 'border-[#E5E7EB] bg-[#F9FAFB] hover:bg-[#FAF5FF] hover:border-[#6D28D9]/40 hover:shadow-xs active:scale-[0.98]'
+                  }`}
+                  title={`Auto-fill credentials for ${demo.role}`}
+                >
+                  <div className="flex items-center justify-between w-full mb-1">
+                    <span
+                      className={`text-xs font-bold transition-colors leading-tight ${
+                        isSelected ? 'text-[#6D28D9]' : 'text-[#111827] group-hover:text-[#6D28D9]'
+                      }`}
+                    >
+                      {demo.role}
+                    </span>
+                    {isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" />
+                    )}
+                  </div>
+                  <span
+                    className={`text-[11px] font-normal leading-tight tracking-tight transition-colors ${
+                      isSelected ? 'text-[#6D28D9]/80' : 'text-[#6B7280] group-hover:text-[#374151]'
+                    }`}
+                  >
+                    {demo.email}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Privacy & Security Note */}
-        <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-[#625E6E]">
-          <Shield size={13} className="text-[#6C3FF5]" />
+        <div className="mt-5 pt-1 flex items-center justify-center gap-1.5 text-xs text-[#6B7280]">
+          <Shield size={13} className="text-[#10B981]" />
           <span>Protected with 256-bit enterprise encryption</span>
         </div>
       </div>
