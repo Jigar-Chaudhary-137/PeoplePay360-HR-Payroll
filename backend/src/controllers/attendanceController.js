@@ -89,7 +89,7 @@ async function checkIn(req, res, next) {
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = req.body.date || new Date().toISOString().split('T')[0];
     const nowTime = new Date().toTimeString().split(' ')[0]; // 'HH:MM:SS'
 
     // Check if record exists for today
