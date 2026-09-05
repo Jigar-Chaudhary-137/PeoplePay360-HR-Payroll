@@ -5,7 +5,7 @@ const { logAudit } = require('../utils/auditLogger');
 
 async function getPayslips(req, res, next) {
   try {
-    const { payrun_id, employee_id, status } = req.query;
+    const { payrun_id, employee_id, status, period_month } = req.query;
     let sql = `
       SELECT ps.*,
              e.first_name, e.last_name, e.employee_code, e.email AS employee_email,
@@ -37,6 +37,11 @@ async function getPayslips(req, res, next) {
     if (status) {
       sql += ' AND ps.status = ?';
       params.push(status);
+    }
+
+    if (period_month) {
+      sql += " AND DATE_FORMAT(ps.period_start, '%Y-%m') = ?";
+      params.push(period_month);
     }
 
     sql += ' ORDER BY ps.period_start DESC, e.first_name ASC';

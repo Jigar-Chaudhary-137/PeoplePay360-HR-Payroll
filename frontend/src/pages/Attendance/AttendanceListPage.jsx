@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNotify } from '../../context/NotificationContext';
 import { attendanceService } from '../../services/attendanceService';
-import { MOCK_EMPLOYEE_LIST } from '../../data/attendanceMockData';
+import { employeeAPI } from '../../services/api';
 import AttendanceTable from '../../components/attendance/AttendanceTable';
 import ManualCorrectionModal from '../../components/attendance/ManualCorrectionModal';
 import QuickCheckInWidget from '../../components/attendance/QuickCheckInWidget';
@@ -29,9 +29,24 @@ export function AttendanceListPage() {
 
   // Data & Modal State
   const [records, setRecords] = useState([]);
+  const [employeesList, setEmployeesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 25;
+
+  useEffect(() => {
+    async function loadEmployees() {
+      try {
+        const res = await employeeAPI.getAll();
+        setEmployeesList(res.data || []);
+      } catch (err) {
+        console.error('Failed to load employees for attendance filter', err);
+      }
+    }
+    loadEmployees();
+  }, []);
 
   // If opened with employeeId route parameter, initialize filter
   useEffect(() => {
@@ -62,6 +77,7 @@ export function AttendanceListPage() {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchAttendance();
   }, [search, selectedDate, selectedEmployee, selectedStatus]);
 
@@ -85,7 +101,14 @@ export function AttendanceListPage() {
   const absentCount = records.filter((r) => r.status === 'Absent').length;
   const halfDayCount = records.filter((r) => r.status === 'Half Day').length;
 
-  const currentFilteredEmployee = MOCK_EMPLOYEE_LIST.find((e) => String(e.id) === String(selectedEmployee));
+  const currentFilteredEmployee = employeesList.find((e) => String(e.id) === String(selectedEmployee));
+  const currentEmpName = currentFilteredEmployee 
+    ? `${currentFilteredEmployee.first_name} ${currentFilteredEmployee.last_name}` 
+    : '';
+  const currentEmpCode = currentFilteredEmployee ? currentFilteredEmployee.employee_code : '';
+
+  const totalPages = Math.max(1, Math.ceil(records.length / pageSize));
+  const paginatedRecords = records.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-6 pb-8 text-[#17151F]">
@@ -95,7 +118,7 @@ export function AttendanceListPage() {
           <div className="flex items-center gap-2 text-sm text-[#6C3FF5]">
             <User size={16} />
             <span>
-              Showing attendance history for <strong className="text-[#17151F]">{currentFilteredEmployee.name}</strong> ({currentFilteredEmployee.code})
+              Showing attendance history for <strong className="text-[#17151F]">{currentEmpName}</strong> ({currentEmpCode})
             </span>
           </div>
           <Link
@@ -202,9 +225,9 @@ export function AttendanceListPage() {
                   className="form-select text-xs py-1.5"
                 >
                   <option value="" className="bg-white">All Employees</option>
-                  {MOCK_EMPLOYEE_LIST.map((emp) => (
+                  {employeesList.map((emp) => (
                     <option key={emp.id} value={emp.id} className="bg-white">
-                      {emp.name} ({emp.code})
+                      {emp.first_name} {emp.last_name} ({emp.employee_code})
                     </option>
                   ))}
                 </select>
@@ -242,13 +265,42 @@ export function AttendanceListPage() {
         </div>
 
         {/* Table View */}
-        <AttendanceTable records={records} loading={loading} />
+        <AttendanceTable records={paginatedRecords} loading={loading} />
 
-        {/* Footer Summary */}
-        <div className="p-3 px-4 border-t border-[#E7E5EF] bg-white flex items-center justify-between text-xs text-[#625E6E]">
-          <span>Showing <strong>{records.length}</strong> attendance entries</span>
-          <span>Updated just now</span>
-        </div>
+        {/* Pagination & Footer Summary */}
+        {records.length > pageSize ? (
+          <div className="p-3 px-4 border-t border-[#E7E5EF] bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#625E6E]">
+            <span>
+              Showing <strong>{((currentPage - 1) * pageSize) + 1}</strong> to <strong>{Math.min(currentPage * pageSize, records.length)}</strong> of <strong>{records.length}</strong> logs
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="px-3 py-1.5 rounded-lg border border-[#E7E5EF] bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#17151F] transition-colors"
+              >
+                Previous
+              </button>
+              <span className="font-semibold text-[#17151F]">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className="px-3 py-1.5 rounded-lg border border-[#E7E5EF] bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[#17151F] transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 px-4 border-t border-[#E7E5EF] bg-white flex items-center justify-between text-xs text-[#625E6E]">
+            <span>Showing <strong>{records.length}</strong> attendance entries</span>
+            <span>Updated just now</span>
+          </div>
+        )}
       </div>
 
       {/* Manual Correction Modal */}
