@@ -13,5 +13,6 @@ router.post('/check-out', attendanceController.checkOut);
 
 // Manual correction restricted to HR Manager or Admin
 router.put('/:id', requireRole('HR Manager'), attendanceController.updateAttendance);
+router.put('/:id/correction', requireRole('HR Manager'), attendanceController.updateAttendance);
 
 module.exports = router;

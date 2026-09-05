@@ -2,6 +2,7 @@ const { query, getTransactionConnection } = require('../config/db');
 const { computeEmployeePayroll } = require('../services/payrollEngine');
 const { detectPayrunAnomalies } = require('../services/anomalyService');
 const { logAudit } = require('../utils/auditLogger');
+const { notifyPayrollAdmins } = require('../services/notificationService');
 
 /**
  * Step 2 helper: lists employees who have a valid contract for the selected period & structure
@@ -338,6 +339,14 @@ async function validatePayrun(req, res, next) {
     await query(`UPDATE payslips SET status = 'confirmed' WHERE payrun_id = ?`, [id]);
 
     await logAudit(req.user?.id, 'VALIDATE_PAYRUN', 'payrun', id, { total_net: payrun.total_net });
+
+    // Notify payroll and admin users
+    await notifyPayrollAdmins(
+      'Payrun Validated',
+      `Payrun "${payrun.name}" (${payrun.period_start} to ${payrun.period_end}) has been validated and locked. Total Net: ₹${Number(payrun.total_net).toLocaleString('en-IN')}.`,
+      'success',
+      payrun.created_by
+    );
 
     const [updated] = await query('SELECT * FROM payruns WHERE id = ?', [id]);
     return res.json({

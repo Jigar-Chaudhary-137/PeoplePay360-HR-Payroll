@@ -1,5 +1,6 @@
 const { query, getTransactionConnection } = require('../config/db');
 const { logAudit } = require('../utils/auditLogger');
+const { notifyEmployee } = require('../services/notificationService');
 
 // 1. Time Off Types
 async function getTimeOffTypes(req, res, next) {
@@ -261,6 +262,14 @@ async function approveTimeOffRequest(req, res, next) {
     await conn.commit();
     await logAudit(req.user.id, 'APPROVE_LEAVE_REQUEST', 'time_off_request', id, { days: reqItem.days_requested });
 
+    // Notify the employee whose leave was approved
+    await notifyEmployee(
+      reqItem.employee_id,
+      'Time-Off Request Approved',
+      `Your request for ${reqItem.days_requested} day(s) (${reqItem.start_date} to ${reqItem.end_date}) has been approved.`,
+      'success'
+    );
+
     const [updated] = await query('SELECT * FROM time_off_requests WHERE id = ?', [id]);
     return res.json({
       success: true,
@@ -297,6 +306,14 @@ async function rejectTimeOffRequest(req, res, next) {
     );
 
     await logAudit(req.user.id, 'REJECT_LEAVE_REQUEST', 'time_off_request', id, { reason: rejection_reason });
+
+    // Notify the employee whose leave was rejected
+    await notifyEmployee(
+      existing.employee_id,
+      'Time-Off Request Rejected',
+      `Your request for ${existing.days_requested} day(s) (${existing.start_date} to ${existing.end_date}) was rejected.${rejection_reason ? ` Reason: ${rejection_reason}` : ''}`,
+      'error'
+    );
 
     const [updated] = await query('SELECT * FROM time_off_requests WHERE id = ?', [id]);
     return res.json({
