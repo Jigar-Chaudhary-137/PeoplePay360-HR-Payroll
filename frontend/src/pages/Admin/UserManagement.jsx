@@ -94,17 +94,17 @@ export function UserManagement() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 text-[#17151F]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E5EF]">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            User Accounts & RBAC
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
+          <h1 className="text-2xl font-bold text-[#17151F] flex items-center gap-2.5">
+            User Administration & RBAC
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] font-bold">
               {users.length} Accounts
             </span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-[#625E6E] mt-1">
             Role assignments, employee record linkage, and authentication status
           </p>
         </div>
@@ -119,8 +119,8 @@ export function UserManagement() {
       {loading ? (
         <LoadingSpinner text="Loading user directory..." />
       ) : (
-        <div className="card overflow-hidden">
-          <div className="custom-table-container">
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -136,24 +136,24 @@ export function UserManagement() {
                 {users.map((u) => (
                   <tr key={u.id}>
                     <td>
-                      <span className="font-semibold text-slate-900">{u.work_email}</span>
-                      <span className="text-[11px] text-slate-400 block font-mono">UID: #{u.id}</span>
+                      <span className="font-semibold text-[#17151F]">{u.work_email}</span>
+                      <span className="text-[11px] text-[#625E6E] block font-mono">UID: #{u.id}</span>
                     </td>
                     <td>
                       {u.first_name ? (
                         <div>
-                          <span className="font-medium text-slate-800">{u.first_name} {u.last_name}</span>
-                          <span className="text-[11px] text-blue-600 block font-mono">{u.emp_code}</span>
+                          <span className="font-medium text-[#17151F]">{u.first_name} {u.last_name}</span>
+                          <span className="text-[11px] text-[#6C3FF5] block font-mono">{u.emp_code}</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">No Employee Linked</span>
+                        <span className="text-xs text-[#918C9F] italic">No Employee Linked</span>
                       )}
                     </td>
-                    <td className="text-xs text-slate-600 font-medium">
+                    <td className="text-xs text-[#625E6E] font-medium">
                       {u.department_name ? `${u.department_name} • ${u.job_title || ''}` : '-'}
                     </td>
                     <td>
-                      <span className="font-semibold text-xs px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+                      <span className="font-semibold text-xs px-2.5 py-1 rounded-lg bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8]">
                         {u.role}
                       </span>
                     </td>
@@ -169,7 +169,7 @@ export function UserManagement() {
                     <td className="text-right">
                       <button
                         onClick={() => handleOpenEdit(u)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors"
+                        className="p-1.5 rounded-lg text-[#625E6E] hover:text-[#6C3FF5] hover:bg-[#F8F5FF] transition-colors"
                         title="Edit User Role / Status"
                       >
                         <Edit size={16} />
@@ -219,26 +219,26 @@ export function UserManagement() {
             <div>
               <label className="form-label">Assigned Role *</label>
               <select
-                className="form-select font-medium"
+                className="form-select font-medium bg-white text-[#17151F] border-[#DDD9E8]"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
-                <option value="Employee">Employee (Self-Service)</option>
-                <option value="HR Manager">HR Manager</option>
-                <option value="HR Payroll User">HR Payroll User</option>
-                <option value="HR Payroll Admin">HR Payroll Admin</option>
-                <option value="Admin">Admin (Full System)</option>
+                <option value="Employee" className="bg-white">Employee (Self-Service)</option>
+                <option value="HR Manager" className="bg-white">HR Manager</option>
+                <option value="HR Payroll User" className="bg-white">HR Payroll User</option>
+                <option value="HR Payroll Admin" className="bg-white">HR Payroll Admin</option>
+                <option value="Admin" className="bg-white">Admin (Full System)</option>
               </select>
             </div>
             <div>
               <label className="form-label">Account Status</label>
               <select
-                className="form-select"
+                className="form-select bg-white text-[#17151F] border-[#DDD9E8]"
                 value={formData.account_status}
                 onChange={(e) => setFormData({ ...formData, account_status: e.target.value })}
               >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive (Blocked)</option>
+                <option value="Active" className="bg-white">Active</option>
+                <option value="Inactive" className="bg-white">Inactive (Blocked)</option>
               </select>
             </div>
           </div>
@@ -246,20 +246,20 @@ export function UserManagement() {
           <div>
             <label className="form-label">Link to Employee Record</label>
             <select
-              className="form-select"
+              className="form-select bg-white text-[#17151F] border-[#DDD9E8]"
               value={formData.employee_id}
               onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
             >
-              <option value="">No Linked Employee</option>
+              <option value="" className="bg-white">No Linked Employee</option>
               {employees.map((e) => (
-                <option key={e.id} value={e.id}>
+                <option key={e.id} value={e.id} className="bg-white">
                   {e.first_name} {e.last_name} ({e.emp_code})
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#E7E5EF]">
             <button type="button" onClick={() => setModalOpen(false)} className="btn-secondary">
               Cancel
             </button>

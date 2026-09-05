@@ -3,30 +3,27 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileSpreadsheet, Clock, CalendarOff,
   DollarSign, Sliders, ShieldCheck, UserCheck, LogOut, Sparkles,
-  ChevronDown, Menu, X, Bell, Briefcase, ChevronRight, Layers,
-  Search, CheckCircle2, User, Building2
+  ChevronDown, Menu, X, Bell, Briefcase, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotify } from '../context/NotificationContext';
 import { AskPeoplePayAI } from '../components/AI/AskPeoplePayAI';
-import { ErrorBoundary } from '../components/common/CommonUI';
 
 export function DashboardLayout() {
   const { user, logout, switchRole, hasRole, isEmployeeOnly } = useAuth();
-  const { notifications, unreadCount, markAllRead } = useNotify();
+  const { notifications, unreadCount } = useNotify();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const [personaMenuOpen, setPersonaMenuOpen] = useState(false);
-  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
 
   const personas = [
-    { role: 'Admin', name: 'Arjun Mehta', email: 'admin@peoplepay360.com', badge: 'Full Admin' },
-    { role: 'HR Payroll Admin', name: 'Vikram Malhotra', email: 'payroll.admin@peoplepay360.com', badge: 'Payroll Lead' },
-    { role: 'HR Payroll User', name: 'Ananya Sen', email: 'payroll.user@peoplepay360.com', badge: 'Payroll Ops' },
-    { role: 'HR Manager', name: 'Priya Patel', email: 'hr.manager@peoplepay360.com', badge: 'People Ops' },
+    { role: 'Admin', name: 'Vikram Verma', email: 'admin@peoplepay360.com', badge: 'Full Admin' },
+    { role: 'HR Payroll Admin', name: 'Amit Singh', email: 'amit.singh@peoplepay360.com', badge: 'Payroll Lead' },
+    { role: 'HR Payroll User', name: 'Neha Gupta', email: 'neha.gupta@peoplepay360.com', badge: 'Payroll Ops' },
+    { role: 'HR Manager', name: 'Priya Patel', email: 'priya.patel@peoplepay360.com', badge: 'People Ops' },
     { role: 'Employee', name: 'Rahul Sharma', email: 'rahul.sharma@peoplepay360.com', badge: 'Self-Service' }
   ];
 
@@ -46,7 +43,7 @@ export function DashboardLayout() {
 
   const navGroups = [
     {
-      title: 'OVERVIEW',
+      title: 'MAIN',
       items: [
         { to: '/self-service', label: 'My Portal', icon: UserCheck, visible: true },
         { to: '/dashboard', label: 'Payroll Dashboard', icon: LayoutDashboard, visible: !isEmployeeOnly }
@@ -56,149 +53,141 @@ export function DashboardLayout() {
       title: 'PEOPLE',
       items: [
         { to: '/employees', label: 'Employees', icon: Users, visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User') },
-        { to: '/contracts', label: 'Contracts', icon: FileSpreadsheet, visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User') }
-      ]
-    },
-    {
-      title: 'TIME',
-      items: [
-        { to: '/attendance', label: 'Attendance', icon: Clock, visible: true },
-        { to: '/time-off', label: 'Time Off & Leaves', icon: CalendarOff, visible: true },
-        { to: '/schedules', label: 'Working Schedules', icon: Layers, visible: hasRole('HR Manager', 'HR Payroll Admin') }
+        { to: '/contracts', label: 'Contracts', icon: FileSpreadsheet, visible: hasRole('HR Manager', 'HR Payroll Admin', 'HR Payroll User') },
+        { to: '/schedules', label: 'Working Schedules', icon: Clock, visible: hasRole('HR Manager', 'HR Payroll Admin') },
+        { to: '/attendance', label: 'Attendance', icon: Clock, visible: true }
       ]
     },
     {
       title: 'PAYROLL',
       items: [
-        { to: '/payruns', label: 'Payruns (Process)', icon: DollarSign, visible: hasRole('HR Payroll Admin', 'HR Payroll User') },
+        { to: '/time-off', label: 'Time Off & Leaves', icon: CalendarOff, visible: true },
+        { to: '/payruns', label: 'Payrolls (Process)', icon: DollarSign, visible: hasRole('HR Payroll Admin', 'HR Payroll User') },
         { to: '/payslips', label: 'Payslips (Ledger)', icon: Briefcase, visible: true },
         { to: '/salary-config', label: 'Salary Structures & Rules', icon: Sliders, visible: hasRole('HR Payroll Admin', 'HR Payroll User') }
       ]
     },
     {
-      title: 'ADMIN',
+      title: 'ADMINISTRATION',
       items: [
         { to: '/admin/users', label: 'User Administration', icon: ShieldCheck, visible: hasRole('Admin') }
       ]
     }
   ];
 
-  // Get current breadcrumb label
-  const pathParts = location.pathname.split('/').filter(Boolean);
-  const currentBreadcrumb = pathParts.length > 0
-    ? pathParts[pathParts.length - 1].replace(/-/g, ' ')
-    : 'Dashboard';
-
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
+    <div className="flex h-screen overflow-hidden bg-[#F8F7FC] text-[#171717] font-sans">
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? 'w-64 sm:w-72' : 'w-20'
-        } bg-slate-900/95 border-r border-white/10 flex flex-col transition-all duration-300 z-30 shrink-0 select-none backdrop-blur-xl`}
+          sidebarOpen ? 'w-[260px]' : 'w-20'
+        } bg-white border-r border-[#E5E7EB] flex flex-col transition-all duration-300 z-30 shrink-0 select-none shadow-sm`}
       >
-        {/* Logo */}
-        <div className="h-20 px-5 flex items-center justify-between border-b border-white/10">
+        {/* Logo / Brand Area */}
+        <div className="h-20 px-5 flex items-center justify-between border-b border-[#E5E7EB] bg-white">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-sky-500/25 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#6D28D9] to-[#5B21B6] flex items-center justify-center text-white font-black text-xl shadow-md shadow-[#6D28D9]/20 shrink-0">
               360
             </div>
             {sidebarOpen && (
               <div className="truncate">
-                <span className="font-extrabold text-lg tracking-tight text-white block">
-                  PEOPLEPAY<span className="text-sky-400">360</span>
+                <span className="font-extrabold text-lg tracking-tight text-[#171717] block font-heading">
+                  PeoplePay<span className="text-[#6D28D9]">360</span>
                 </span>
-                <span className="text-[11px] text-slate-400 uppercase tracking-widest block font-bold">
-                  HR & Payroll SaaS
+                <span className="text-[10px] text-[#6B7280] uppercase tracking-widest block font-bold">
+                  HR & Payroll Platform
                 </span>
               </div>
             )}
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors"
-            title={sidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+            className="text-[#6B7280] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#FAF7FF] transition-colors"
           >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
 
-        {/* Navigation Groups */}
-        <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
-          {navGroups.map((group) => {
-            const visibleItems = group.items.filter((i) => i.visible);
+        {/* Nav Links Grouped */}
+        <nav className="flex-1 overflow-y-auto px-3.5 py-5 space-y-5">
+          {navGroups.map((group, idx) => {
+            const visibleItems = group.items.filter(i => i.visible);
             if (visibleItems.length === 0) return null;
 
             return (
-              <div key={group.title} className="space-y-2">
+              <div key={group.title || idx} className="space-y-1">
                 {sidebarOpen && (
-                  <p className="px-3 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                  <div className="px-3 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-[0.08em] mb-2 font-heading">
                     {group.title}
-                  </p>
+                  </div>
                 )}
-                <div className="space-y-1">
-                  {visibleItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive =
-                      location.pathname === item.to ||
-                      (item.to !== '/dashboard' && item.to !== '/' && location.pathname.startsWith(item.to));
-
-                    return (
-                      <NavLink
-                        key={item.to}
-                        to={item.to}
-                        className={`flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm transition-all min-h-[44px] ${
-                          isActive
-                            ? 'bg-gradient-to-r from-sky-600 to-sky-500 text-white shadow-lg shadow-sky-600/30 font-semibold'
-                            : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'
-                        }`}
-                        title={!sidebarOpen ? item.label : undefined}
-                      >
-                        <Icon size={20} className="shrink-0" />
-                        {sidebarOpen && <span className="truncate">{item.label}</span>}
-                      </NavLink>
-                    );
-                  })}
-                </div>
+                {visibleItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.to || (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={`flex items-center gap-3 px-3.5 py-2.5 mb-1 rounded-xl text-sm font-medium transition-all ${
+                        isActive
+                          ? 'bg-[#F3E8FF] text-[#6D28D9] font-semibold border-l-4 border-[#6D28D9] shadow-sm'
+                          : 'text-[#6B7280] hover:text-[#171717] hover:bg-[#FAF7FF]'
+                      }`}
+                      title={!sidebarOpen ? item.label : undefined}
+                    >
+                      <Icon size={20} className={`shrink-0 ${isActive ? 'text-[#6D28D9]' : 'text-[#9CA3AF]'}`} />
+                      {sidebarOpen && (
+                        <span
+                          className="truncate"
+                          style={{
+                            fontFamily: '"Times New Roman", Times, serif',
+                            fontSize: '14px',
+                            lineHeight: '1.4'
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                      )}
+                    </NavLink>
+                  );
+                })}
               </div>
             );
           })}
         </nav>
 
-        {/* AI Quick Button */}
-        <div className="p-4 border-t border-white/10">
+        {/* AI Quick Button in Sidebar */}
+        <div className="p-3.5 border-t border-[#E5E7EB]">
           <button
             onClick={() => setAiDrawerOpen(true)}
-            className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600/30 via-sky-600/30 to-purple-600/30 hover:from-indigo-600/50 hover:to-sky-600/50 border border-sky-500/40 text-sky-300 font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-sky-500/15"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#FAF7FF] hover:bg-[#F3E8FF] border border-[#E5E7EB] text-[#6D28D9] font-semibold text-xs transition-all shadow-sm"
           >
-            <Sparkles size={18} className="text-sky-400 animate-pulse shrink-0" />
+            <Sparkles size={16} className="text-[#6D28D9] animate-pulse" />
             {sidebarOpen && <span>Ask PeoplePay AI</span>}
           </button>
         </div>
 
-        {/* User Account Card */}
-        <div className="p-4 border-t border-white/10 bg-slate-950/60">
+        {/* User Card */}
+        <div className="p-3.5 border-t border-[#E5E7EB] bg-[#FAF7FF]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-xl bg-sky-950 border border-sky-500/40 text-sky-400 flex items-center justify-center font-bold text-sm shrink-0 shadow-md">
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <div className="w-8 h-8 rounded-lg bg-[#F3E8FF] border border-[#E5E7EB] text-[#6D28D9] flex items-center justify-center text-xs font-bold shrink-0">
                 {user?.first_name?.[0] || 'U'}
               </div>
               {sidebarOpen && (
                 <div className="truncate">
-                  <p className="text-sm font-bold text-slate-100 truncate">
-                    {user?.first_name} {user?.last_name}
-                  </p>
-                  <p className="text-xs text-sky-400 font-semibold truncate">{user?.role}</p>
+                  <p className="text-xs font-bold text-[#171717] truncate">{user?.first_name} {user?.last_name}</p>
+                  <p className="text-[10px] text-[#6D28D9] font-semibold truncate">{user?.role}</p>
                 </div>
               )}
             </div>
             {sidebarOpen && (
               <button
                 onClick={logout}
-                className="text-slate-400 hover:text-rose-400 p-2 rounded-xl hover:bg-white/10 transition-colors"
+                className="text-[#9CA3AF] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
                 title="Logout"
               >
-                <LogOut size={18} />
+                <LogOut size={16} />
               </button>
             )}
           </div>
@@ -208,100 +197,47 @@ export function DashboardLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-20 px-8 bg-slate-900/70 border-b border-white/10 backdrop-blur-md flex items-center justify-between z-20 shrink-0">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-3 text-sm text-slate-400">
-            <span className="font-bold text-slate-200">PeoplePay360</span>
-            <ChevronRight size={16} className="text-slate-600" />
-            <span className="text-sky-400 font-bold capitalize text-base">
-              {currentBreadcrumb}
+        <header className="h-16 px-8 bg-white border-b border-[#E5E7EB] flex items-center justify-between z-20 shrink-0 shadow-sm">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-sm text-[#6B7280]">
+            <span className="font-semibold text-[#171717]">PeoplePay360</span>
+            <ChevronRight size={14} className="text-[#9CA3AF]" />
+            <span className="text-[#6D28D9] font-semibold capitalize">
+              {location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
             </span>
           </div>
 
           {/* Right Action Bar */}
-          <div className="flex items-center gap-4">
-            {/* Notification Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                className="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-all"
-                title="Notifications"
-              >
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 text-white text-[11px] font-black flex items-center justify-center shadow-lg shadow-sky-500/50">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {notifMenuOpen && (
-                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-slate-900 border border-white/15 rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                    <h4 className="font-bold text-sm text-slate-100">Notifications</h4>
-                    <button
-                      onClick={markAllRead}
-                      className="text-xs text-sky-400 hover:text-sky-300 font-semibold"
-                    >
-                      Mark all read
-                    </button>
-                  </div>
-                  <div className="space-y-3 mt-3 max-h-72 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <p className="text-xs text-slate-400 py-4 text-center">No unread notifications.</p>
-                    ) : (
-                      notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          className={`p-3 rounded-xl border text-xs transition-all ${
-                            n.is_read
-                              ? 'bg-slate-950/40 border-white/5 text-slate-400'
-                              : 'bg-sky-500/10 border-sky-500/30 text-slate-200 font-medium'
-                          }`}
-                        >
-                          <div className="font-bold text-slate-100 mb-1">{n.title}</div>
-                          <div>{n.message}</div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
+          <div className="flex items-center gap-3">
             {/* Quick Demo Persona Switcher */}
             <div className="relative">
               <button
                 onClick={() => setPersonaMenuOpen(!personaMenuOpen)}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 transition-all shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#F8F7FC] hover:bg-[#F3E8FF] border border-[#E5E7EB] text-xs font-medium text-[#171717] transition-all"
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-slate-400">Demo Role:</span>
-                <span className="text-sky-400 font-bold">{user?.role}</span>
-                <ChevronDown size={16} className="text-slate-400 shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[#6B7280]">Demo Role:</span>
+                <span className="text-[#6D28D9] font-bold">{user?.role}</span>
+                <ChevronDown size={14} className="text-[#6B7280]" />
               </button>
 
               {personaMenuOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-slate-900 border border-white/15 rounded-2xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <p className="text-[11px] font-extrabold text-slate-400 px-3 py-1.5 uppercase tracking-wider">
-                    Switch Demo Role
-                  </p>
-                  <div className="space-y-1.5 mt-2">
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-[#E5E7EB] rounded-xl shadow-xl p-2 z-50">
+                  <p className="text-[11px] font-bold text-[#9CA3AF] px-2 py-1 uppercase tracking-wider font-heading">Switch Role / Persona</p>
+                  <div className="space-y-1 mt-1">
                     {personas.map((p) => (
                       <button
                         key={p.role}
                         onClick={() => handlePersonaSwitch(p.role)}
-                        className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all ${
-                          user?.role === p.role
-                            ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30'
-                            : 'hover:bg-white/10 text-slate-300 font-medium'
+                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                          user?.role === p.role ? 'bg-[#6D28D9] text-white font-bold' : 'hover:bg-[#FAF7FF] text-[#171717]'
                         }`}
                       >
                         <div>
-                          <div className="font-bold">{p.name}</div>
-                          <div className="text-[11px] opacity-75 font-medium">{p.email}</div>
+                          <div className="font-medium">{p.name}</div>
+                          <div className="text-[10px] opacity-75">{p.email}</div>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-black/40 text-white font-bold shrink-0">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${user?.role === p.role ? 'bg-white/20 text-white' : 'bg-[#F3E8FF] text-[#6D28D9]'}`}>
                           {p.role}
                         </span>
                       </button>
@@ -314,21 +250,17 @@ export function DashboardLayout() {
             {/* Ask AI Button */}
             <button
               onClick={() => setAiDrawerOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-sky-600/25 transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#6D28D9] hover:bg-[#5B21B6] text-white text-xs font-semibold shadow-sm transition-all"
             >
-              <Sparkles size={16} />
+              <Sparkles size={14} />
               <span>Ask AI</span>
             </button>
           </div>
         </header>
 
-        {/* Main Viewport */}
-        <main className="flex-1 overflow-y-auto p-6 sm:p-8 relative">
-          <div className="max-w-7xl mx-auto">
-            <ErrorBoundary>
-              <Outlet />
-            </ErrorBoundary>
-          </div>
+        {/* Page Viewport */}
+        <main className="flex-1 overflow-y-auto p-8 relative bg-[#F8F7FC]">
+          <Outlet />
         </main>
       </div>
 

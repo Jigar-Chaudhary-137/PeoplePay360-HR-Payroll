@@ -153,29 +153,29 @@ export function TimeOffRequests() {
   ];
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-6 pb-6 text-[#17151F]">
       {/* Top Sub-Navigation Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <TimeOffNavigationTabs />
       </div>
 
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E5EF]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
-              Time Off Requests
+            <h1 className="text-2xl font-bold tracking-tight text-[#17151F]">
+              Time Off & Leave Requests
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] font-bold">
               {requests.length} Requests
             </span>
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-[#625E6E] mt-0.5">
             Review, approve, and track employee leave requests and balances
           </p>
         </div>
 
-        {/* Primary Blue "New" Button */}
+        {/* Primary Action Button */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setCreateModalOpen(true)}
@@ -188,33 +188,33 @@ export function TimeOffRequests() {
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="card p-3.5 border-l-4 border-l-blue-500">
-          <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider font-heading">Total Requests</span>
-          <p className="text-xl font-extrabold text-slate-900 mt-0.5 font-heading">{stats.total}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="glass-card p-4 border-l-4 border-l-[#6C3FF5]">
+          <span className="text-xs uppercase font-bold text-[#625E6E] tracking-wider">Total Requests</span>
+          <p className="text-2xl font-bold text-[#17151F] mt-1">{stats.total}</p>
         </div>
-        <div className="card p-3.5 border-l-4 border-l-amber-500">
-          <span className="text-[11px] uppercase font-bold text-amber-600 tracking-wider font-heading">To Approve</span>
-          <p className="text-xl font-extrabold text-amber-700 mt-0.5 font-heading">{stats.toApprove}</p>
+        <div className="glass-card p-4 border-l-4 border-l-amber-500 border-amber-200 bg-amber-50">
+          <span className="text-xs uppercase font-bold text-amber-700 tracking-wider">To Approve</span>
+          <p className="text-2xl font-bold text-amber-700 mt-1">{stats.toApprove}</p>
         </div>
-        <div className="card p-3.5 border-l-4 border-l-emerald-500">
-          <span className="text-[11px] uppercase font-bold text-emerald-600 tracking-wider font-heading">Approved</span>
-          <p className="text-xl font-extrabold text-emerald-700 mt-0.5 font-heading">{stats.approved}</p>
+        <div className="glass-card p-4 border-l-4 border-l-emerald-500 border-emerald-200 bg-emerald-50">
+          <span className="text-xs uppercase font-bold text-emerald-700 tracking-wider">Approved</span>
+          <p className="text-2xl font-bold text-emerald-700 mt-1">{stats.approved}</p>
         </div>
-        <div className="card p-3.5 border-l-4 border-l-rose-500">
-          <span className="text-[11px] uppercase font-bold text-rose-600 tracking-wider font-heading">Refused</span>
-          <p className="text-xl font-extrabold text-rose-700 mt-0.5 font-heading">{stats.refused}</p>
+        <div className="glass-card p-4 border-l-4 border-l-rose-500 border-rose-200 bg-rose-50">
+          <span className="text-xs uppercase font-bold text-rose-700 tracking-wider">Refused</span>
+          <p className="text-2xl font-bold text-rose-700 mt-1">{stats.refused}</p>
         </div>
       </div>
 
       {/* Toolbar: Search, My Team Filter, Status, Leave Type, Dates */}
-      <div className="card p-4 space-y-3">
+      <div className="glass-card p-4 space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Left Toolbar: Search & My Team Button */}
           <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2.5">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[200px]">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#918C9F] pointer-events-none" />
               <input
                 type="text"
                 value={search}
@@ -225,7 +225,7 @@ export function TimeOffRequests() {
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#918C9F] hover:text-[#17151F]"
                 >
                   <X size={12} />
                 </button>
@@ -239,8 +239,8 @@ export function TimeOffRequests() {
                 onClick={() => setMyTeamOnly(!myTeamOnly)}
                 className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
                   myTeamOnly
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200'
+                    ? 'bg-[#6C3FF5] text-white border-[#6C3FF5] shadow-sm'
+                    : 'bg-[#F8F8FC] text-[#17151F] hover:bg-[#F1ECFF] border-[#DDD9E8]'
                 }`}
                 title="Filter only direct team members"
               >
@@ -254,30 +254,30 @@ export function TimeOffRequests() {
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Status Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-500 font-medium">Status:</span>
+              <span className="text-[11px] text-[#625E6E] font-medium">Status:</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="form-select text-xs py-1.5 px-2.5 w-auto"
+                className="form-select text-xs py-1.5 px-2.5 w-auto bg-white text-[#17151F] border-[#DDD9E8]"
               >
-                <option value="All">All Statuses</option>
-                <option value="To Approve">To Approve</option>
-                <option value="Approved">Approved</option>
-                <option value="Refused">Refused</option>
+                <option value="All" className="bg-white">All Statuses</option>
+                <option value="To Approve" className="bg-white">To Approve</option>
+                <option value="Approved" className="bg-white">Approved</option>
+                <option value="Refused" className="bg-white">Refused</option>
               </select>
             </div>
 
             {/* Leave Type Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-500 font-medium">Type:</span>
+              <span className="text-[11px] text-[#625E6E] font-medium">Type:</span>
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="form-select text-xs py-1.5 px-2.5 w-auto"
+                className="form-select text-xs py-1.5 px-2.5 w-auto bg-white text-[#17151F] border-[#DDD9E8]"
               >
-                <option value="All">All Types</option>
+                <option value="All" className="bg-white">All Types</option>
                 {leaveTypesList.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t} className="bg-white">{t}</option>
                 ))}
               </select>
             </div>
@@ -291,7 +291,7 @@ export function TimeOffRequests() {
                 className="form-input text-xs py-1.5 px-2 w-32"
                 title="From Date"
               />
-              <span className="text-slate-400 text-xs">→</span>
+              <span className="text-[#918C9F] text-xs">→</span>
               <input
                 type="date"
                 value={endDate}
@@ -306,7 +306,7 @@ export function TimeOffRequests() {
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-lg text-[#625E6E] hover:text-[#17151F] hover:bg-[#F8F5FF] transition-colors"
                 title="Clear all filters"
               >
                 <RotateCcw size={14} />
@@ -317,35 +317,35 @@ export function TimeOffRequests() {
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 text-[11px]">
-            <span className="text-slate-400 font-medium">Active Filters:</span>
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#E7E5EF] text-[11px]">
+            <span className="text-[#625E6E] font-medium">Active Filters:</span>
             {search && (
-              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] flex items-center gap-1">
                 Search: "{search}"
                 <button onClick={() => setSearch('')}><X size={10} /></button>
               </span>
             )}
             {myTeamOnly && (
-              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] flex items-center gap-1">
                 My Team Only
                 <button onClick={() => setMyTeamOnly(false)}><X size={10} /></button>
               </span>
             )}
             {selectedStatus !== 'All' && (
-              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] flex items-center gap-1">
                 Status: {selectedStatus}
                 <button onClick={() => setSelectedStatus('All')}><X size={10} /></button>
               </span>
             )}
             {selectedType !== 'All' && (
-              <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] flex items-center gap-1">
                 Type: {selectedType}
                 <button onClick={() => setSelectedType('All')}><X size={10} /></button>
               </span>
             )}
             <button
               onClick={handleClearFilters}
-              className="text-blue-600 hover:text-blue-800 underline ml-1 cursor-pointer font-medium"
+              className="text-[#6C3FF5] hover:text-[#5125C7] underline ml-1 cursor-pointer font-medium"
             >
               Reset all
             </button>

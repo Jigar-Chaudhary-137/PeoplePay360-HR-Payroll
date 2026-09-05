@@ -7,25 +7,32 @@ import { PasswordInput } from '../../components/common/PasswordInput';
 import { Checkbox } from '../../components/common/Checkbox';
 import { Button } from '../../components/common/Button';
 import { FormMessage } from '../../components/common/FormMessage';
-import { Mail, Shield, Sparkles, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Shield, Sparkles } from 'lucide-react';
 
+/**
+ * Enterprise Login Page for PeoplePay360
+ */
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Form State
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false
   });
 
+  // Validation & UI State
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [serverMessage, setServerMessage] = useState(null);
+  const [serverMessage, setServerMessage] = useState(null); // { type: 'error'|'warning'|'info'|'success', message: '' }
 
+  // Email Regex Pattern
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  // Validation Logic
   const validateField = (field, value) => {
     let error = '';
     if (field === 'email') {
@@ -52,6 +59,7 @@ export function Login() {
 
     if (serverMessage) setServerMessage(null);
 
+    // Live validation if field has been touched
     if (touched[name] && type !== 'checkbox') {
       const error = validateField(name, val);
       setErrors((prev) => ({ ...prev, [name]: error }));
@@ -65,6 +73,7 @@ export function Login() {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Quick-fill Demo Account credentials helper
   const handleQuickFill = (email, password) => {
     setFormData({ email, password, rememberMe: true });
     setErrors({});
@@ -72,9 +81,11 @@ export function Login() {
     setServerMessage(null);
   };
 
+  // Form Submission
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
+    // Validate all fields
     const emailError = validateField('email', formData.email);
     const passwordError = validateField('password', formData.password);
 
@@ -101,6 +112,7 @@ export function Login() {
           message: `Signed in successfully! Welcome back, ${user?.name || user?.first_name || 'User'}.`
         });
 
+        // Route HR/Payroll roles to /dashboard and standard employees to /self-service
         setTimeout(() => {
           if (role === 'Employee') {
             navigate('/self-service', { replace: true });
@@ -110,16 +122,31 @@ export function Login() {
         }, 300);
       } else {
         const errMsg = res?.error || res?.message || 'Invalid email or password. Please try again.';
-        setServerMessage({
-          type: 'error',
-          message: errMsg
-        });
+        
+        if (errMsg.toLowerCase().includes('inactive') || errMsg.toLowerCase().includes('disabled')) {
+          setServerMessage({
+            type: 'warning',
+            message: 'Your account is currently inactive. Please contact your HR administrator.'
+          });
+        } else {
+          setServerMessage({
+            type: 'error',
+            message: errMsg
+          });
+        }
       }
     } catch (err) {
-      setServerMessage({
-        type: 'error',
-        message: err.message || 'Authentication failed. Please check your credentials.'
-      });
+      if (err.message && err.message.toLowerCase().includes('network')) {
+        setServerMessage({
+          type: 'error',
+          message: 'Network connection error. Please verify your internet or backend server status.'
+        });
+      } else {
+        setServerMessage({
+          type: 'error',
+          message: err.message || 'Authentication failed. Please check your credentials.'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -127,30 +154,29 @@ export function Login() {
 
   return (
     <AuthLayout>
-      <div className="glass-card p-8 sm:p-10 shadow-2xl border border-white/15">
+      <div className="glass-card p-8 sm:p-10 shadow-xl border-[#DDD9E8] bg-white text-[#17151F]">
         {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">
-            Sign In to PeoplePay<span className="text-sky-400">360</span>
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#17151F] tracking-tight mb-1">
+            Welcome back
           </h2>
-          <p className="text-sm text-slate-400 mt-2 font-medium">
-            Enter your work credentials to access your HR & payroll operations platform.
+          <p className="text-sm text-[#625E6E]">
+            Sign in to manage your people and payroll operations.
           </p>
         </div>
 
-        {/* Global Alert */}
+        {/* Global Alert / Status Message */}
         {serverMessage && (
-          <div className="mb-6">
-            <FormMessage
-              type={serverMessage.type}
-              message={serverMessage.message}
-              onClose={() => setServerMessage(null)}
-            />
-          </div>
+          <FormMessage
+            type={serverMessage.type}
+            message={serverMessage.message}
+            onClose={() => setServerMessage(null)}
+          />
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {/* Work Email */}
           <TextInput
             id="login-email"
             name="email"
@@ -168,6 +194,7 @@ export function Login() {
             disabled={isLoading}
           />
 
+          {/* Password */}
           <PasswordInput
             id="login-password"
             name="password"
@@ -182,6 +209,7 @@ export function Login() {
             disabled={isLoading}
           />
 
+          {/* Remember Me & Forgot Password Row */}
           <div className="flex items-center justify-between pt-1 pb-2">
             <Checkbox
               id="login-remember"
@@ -194,12 +222,13 @@ export function Login() {
 
             <Link
               to="/forgot-password"
-              className="text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors"
+              className="text-xs font-semibold text-[#6C3FF5] hover:text-[#5125C7] transition-colors"
             >
               Forgot password?
             </Link>
           </div>
 
+          {/* Submit Button */}
           <Button
             type="submit"
             variant="primary"
@@ -207,67 +236,65 @@ export function Login() {
             fullWidth
             loading={isLoading}
             loadingText="Signing in…"
-            icon={ArrowRight}
-            iconPosition="right"
           >
-            Sign in to Platform
+            Sign in
           </Button>
         </form>
 
-        {/* Quick Demo Credentials Access */}
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-            <Sparkles size={14} className="text-sky-400 animate-pulse" />
-            <span>Quick Demo Persona Access</span>
+        {/* Demo Quick-Fill Access Chips */}
+        <div className="mt-8 pt-6 border-t border-dashed border-[#DDD9E8]">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#625E6E] mb-3">
+            <Sparkles size={14} className="text-[#6C3FF5]" />
+            <span>Quick Demo Access</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => handleQuickFill('admin@peoplepay360.com', 'Password@123')}
               disabled={isLoading}
-              className="p-3 rounded-xl bg-slate-900/80 hover:bg-white/10 border border-white/10 text-left transition-all group"
+              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
             >
-              <div className="text-xs font-bold text-slate-200 group-hover:text-sky-400">Admin</div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">admin@...</div>
+              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">Admin</span>
+              <span className="text-[10px] text-[#625E6E] truncate">admin@...</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickFill('priya.patel@peoplepay360.com', 'Password@123')}
               disabled={isLoading}
-              className="p-3 rounded-xl bg-slate-900/80 hover:bg-white/10 border border-white/10 text-left transition-all group"
+              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
             >
-              <div className="text-xs font-bold text-slate-200 group-hover:text-sky-400">HR Manager</div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">priya.patel@...</div>
+              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">HR Manager</span>
+              <span className="text-[10px] text-[#625E6E] truncate">priya.patel@...</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickFill('amit.singh@peoplepay360.com', 'Password@123')}
               disabled={isLoading}
-              className="p-3 rounded-xl bg-slate-900/80 hover:bg-white/10 border border-white/10 text-left transition-all group"
+              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
             >
-              <div className="text-xs font-bold text-slate-200 group-hover:text-sky-400">Payroll Admin</div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">amit.singh@...</div>
+              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">Payroll Admin</span>
+              <span className="text-[10px] text-[#625E6E] truncate">amit.singh@...</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickFill('rahul.sharma@peoplepay360.com', 'Password@123')}
               disabled={isLoading}
-              className="p-3 rounded-xl bg-slate-900/80 hover:bg-white/10 border border-white/10 text-left transition-all group"
+              className="flex flex-col items-start p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F8F8FC] hover:bg-[#F1ECFF] hover:border-[#6C3FF5] text-left transition-all group"
             >
-              <div className="text-xs font-bold text-slate-200 group-hover:text-sky-400">Employee</div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">rahul.sharma@...</div>
+              <span className="text-xs font-bold text-[#17151F] group-hover:text-[#6C3FF5]">Employee</span>
+              <span className="text-[10px] text-[#625E6E] truncate">rahul.sharma@...</span>
             </button>
           </div>
         </div>
 
-        {/* Security Note */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
-          <Shield size={14} className="text-emerald-400" />
-          <span>256-bit SSL encrypted & JWT authenticated</span>
+        {/* Privacy & Security Note */}
+        <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-[#625E6E]">
+          <Shield size={13} className="text-[#6C3FF5]" />
+          <span>Protected with 256-bit enterprise encryption</span>
         </div>
       </div>
     </AuthLayout>

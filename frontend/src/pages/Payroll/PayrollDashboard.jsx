@@ -41,16 +41,16 @@ export function PayrollDashboard() {
   // Skeleton loader
   if (loading && !data) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-slate-200 rounded-xl w-72" />
+      <div className="space-y-6">
+        <div className="h-8 skeleton w-72" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="card p-5 h-28 bg-slate-100" />
+            <div key={i} className="glass-card p-5 h-28 skeleton" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="card p-5 h-64 lg:col-span-2 bg-slate-100" />
-          <div className="card p-5 h-64 bg-slate-100" />
+          <div className="glass-card p-5 h-64 lg:col-span-2 skeleton" />
+          <div className="glass-card p-5 h-64 skeleton" />
         </div>
       </div>
     );
@@ -76,14 +76,14 @@ export function PayrollDashboard() {
   const currentPeriodName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-6 pb-6 text-[#17151F]">
       {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E5EF]">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-heading">
+          <h1 className="text-2xl font-bold tracking-tight text-[#17151F]">
             Payroll Operations
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-[#625E6E] mt-0.5">
             Real-time payroll, attendance and workforce insights
           </p>
         </div>
@@ -91,35 +91,31 @@ export function PayrollDashboard() {
         {/* Right side controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Period selector */}
-          <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
-            <Calendar size={13} className="text-blue-600 shrink-0" />
-            <span className="text-slate-400">Period:</span>
+          <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-[#DDD9E8] text-xs font-medium text-[#17151F] shadow-sm">
+            <Calendar size={14} className="text-[#6C3FF5] shrink-0" />
+            <span className="text-[#625E6E]">Period:</span>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="bg-transparent text-slate-800 font-bold outline-none cursor-pointer"
+              className="bg-transparent text-[#17151F] font-bold outline-none cursor-pointer"
             >
-              <option value="">All Periods ({currentPeriodName})</option>
-              {(data?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p, idx) => {
-                const val = typeof p === 'object' && p !== null ? p.period_month : p;
-                const label = typeof p === 'object' && p !== null ? (p.period_label || p.period_month) : p;
-                return (
-                  <option key={val || idx} value={val}>{label}</option>
-                );
-              })}
+              <option value="" className="bg-white text-[#17151F]">All Periods ({currentPeriodName})</option>
+              {(data?.availablePeriods || ['2026-09', '2026-08', '2026-07']).map((p) => (
+                <option key={p} value={p} className="bg-white text-[#17151F]">{p}</option>
+              ))}
             </select>
           </div>
 
           <button
             onClick={loadDashboard}
-            className="btn-secondary text-xs px-3 py-2"
+            className="btn-secondary text-xs px-3.5 py-2"
             title="Refresh Ledger"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
 
-          <Link to="/payruns" className="btn-primary text-xs px-3.5 py-2">
+          <Link to="/payruns" className="btn-primary text-xs px-4 py-2">
             <DollarSign size={15} />
             <span>Process Payrun</span>
           </Link>
@@ -133,7 +129,7 @@ export function PayrollDashboard() {
           value={`₹${Number(kpis.totalNetPaid || 0).toLocaleString('en-IN')}`}
           subtitle={`Gross: ₹${Number(kpis.totalGrossPaid || 0).toLocaleString('en-IN')}`}
           icon={DollarSign}
-          color="sky"
+          color="purple"
         />
         <StatCard
           title="Payslips Issued"
@@ -167,13 +163,13 @@ export function PayrollDashboard() {
 
       {/* Alerts / Anomalies Section */}
       {anomalies.length > 0 && (
-        <div className="card p-5 border-amber-200 bg-amber-50/40">
+        <div className="glass-card p-5 border-amber-200 bg-amber-50">
           <div className="flex items-center justify-between mb-3.5">
-            <div className="flex items-center gap-2 text-amber-900 font-bold text-sm font-heading">
+            <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
               <ShieldAlert size={18} className="text-amber-600" />
               <span>Payroll Warnings & Anomalies ({anomalies.length} Flagged)</span>
             </div>
-            <Link to="/payruns" className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition-colors">
+            <Link to="/payruns" className="text-xs text-[#6C3FF5] hover:text-[#5125C7] font-semibold flex items-center gap-1 transition-colors">
               <span>Inspect in Payrun Console</span>
               <ArrowUpRight size={13} />
             </Link>
@@ -186,21 +182,21 @@ export function PayrollDashboard() {
                   key={idx}
                   className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${
                     isWarning
-                      ? 'bg-white border-amber-200 text-slate-800 shadow-2xs'
-                      : 'bg-white border-blue-200 text-slate-800 shadow-2xs'
+                      ? 'bg-white border-amber-200 text-[#17151F]'
+                      : 'bg-white border-blue-200 text-[#17151F]'
                   }`}
                 >
                   <div className="flex items-center justify-between font-bold">
-                    <span className="truncate text-slate-900 font-heading text-sm">{a.title}</span>
+                    <span className="truncate text-[#17151F] text-sm">{a.title}</span>
                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                       isWarning
-                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                        : 'bg-blue-100 text-blue-800 border border-blue-300'
                     }`}>
                       {a.severity}
                     </span>
                   </div>
-                  <p className="text-slate-600 text-xs leading-relaxed">{a.message || a.reason}</p>
+                  <p className="text-[#625E6E] text-xs leading-relaxed">{a.message || a.reason}</p>
                 </div>
               );
             })}
@@ -211,21 +207,21 @@ export function PayrollDashboard() {
       {/* Content Grid: 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left / Large: Salary Cost by Department */}
-        <div className="card p-5 lg:col-span-2 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div className="glass-card p-5 lg:col-span-2 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E7E5EF] pb-3">
             <div>
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
-                <Building size={17} className="text-blue-600" />
+              <h3 className="font-bold text-[#17151F] text-base flex items-center gap-2">
+                <Building size={17} className="text-[#6C3FF5]" />
                 Salary Cost by Department
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Aggregated payroll expenditure and average employee compensation</p>
+              <p className="text-xs text-[#625E6E] mt-0.5">Aggregated payroll expenditure and average employee compensation</p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 self-start sm:self-auto">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#F8F5FF] text-[#6C3FF5] border border-[#DDD9E8] self-start sm:self-auto">
               Period: {selectedPeriod || currentPeriodName}
             </span>
           </div>
 
-          <div className="custom-table-container">
+          <div className="overflow-x-auto">
             <table className="custom-table">
               <thead>
                 <tr>
@@ -240,7 +236,7 @@ export function PayrollDashboard() {
               <tbody>
                 {deptCosts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-slate-400 text-sm">
+                    <td colSpan={6} className="text-center py-8 text-[#918C9F] text-sm">
                       No departmental payroll data available.
                     </td>
                   </tr>
@@ -253,25 +249,25 @@ export function PayrollDashboard() {
                     return (
                       <tr key={d.id || d.code || d.department_name || d.name}>
                         <td>
-                          <div className="font-bold text-slate-900 text-sm font-heading">
+                          <div className="font-bold text-[#17151F] text-sm">
                             {d.department_name || d.name}
                           </div>
-                          {d.code && <span className="text-[11px] text-blue-600 font-semibold">Code: {d.code}</span>}
+                          {d.code && <span className="text-[11px] text-[#6C3FF5] font-semibold">Code: {d.code}</span>}
                         </td>
                         <td className="text-center">
-                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#F1ECFF] text-[#6C3FF5] font-bold text-xs border border-[#DDD9E8]">
                             {d.employee_count}
                           </span>
                         </td>
-                        <td className="text-slate-600 text-sm font-medium">{grossCost > 0 ? `₹${grossCost.toLocaleString('en-IN')}` : '—'}</td>
-                        <td className="text-slate-900 font-bold text-sm">₹{netCost.toLocaleString('en-IN')}</td>
-                        <td className="text-slate-600 text-sm font-medium">₹{avgNet.toLocaleString('en-IN')}</td>
+                        <td className="text-[#625E6E] text-sm font-medium">{grossCost > 0 ? `₹${grossCost.toLocaleString('en-IN')}` : '—'}</td>
+                        <td className="text-[#17151F] font-bold text-sm">₹{netCost.toLocaleString('en-IN')}</td>
+                        <td className="text-[#625E6E] text-sm font-medium">₹{avgNet.toLocaleString('en-IN')}</td>
                         <td className="text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <span className="text-xs font-bold text-slate-600">{sharePct}%</span>
-                            <div className="w-12 bg-slate-100 h-2 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                            <span className="text-xs font-bold text-[#17151F]">{sharePct}%</span>
+                            <div className="w-12 bg-[#E7E5EF] h-2 rounded-full overflow-hidden shrink-0">
                               <div
-                                className="bg-blue-600 h-full rounded-full"
+                                className="bg-[#6C3FF5] h-full rounded-full"
                                 style={{ width: `${sharePct}%` }}
                               />
                             </div>
@@ -287,23 +283,23 @@ export function PayrollDashboard() {
         </div>
 
         {/* Right: Monthly Payroll Trend */}
-        <div className="card p-5 space-y-4">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
-              <TrendingUp size={17} className="text-blue-600" />
+        <div className="glass-card p-5 space-y-4">
+          <div className="border-b border-[#E7E5EF] pb-3">
+            <h3 className="font-bold text-[#17151F] text-base flex items-center gap-2">
+              <TrendingUp size={17} className="text-[#6C3FF5]" />
               Monthly Payroll Trend
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">Historical payrun disbursement comparison</p>
+            <p className="text-xs text-[#625E6E] mt-0.5">Historical payrun disbursement comparison</p>
           </div>
 
           <div className="space-y-3">
             {monthlyTrend.length === 0 ? (
-              <div className="text-center py-10 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center mx-auto mb-2 text-slate-400">
+              <div className="text-center py-10 px-4 bg-[#F8F8FC] rounded-xl border border-dashed border-[#DDD9E8]">
+                <div className="w-10 h-10 rounded-full bg-[#F1ECFF] border border-[#DDD9E8] flex items-center justify-center mx-auto mb-2 text-[#6C3FF5]">
                   <TrendingUp size={18} />
                 </div>
-                <p className="text-sm font-bold text-slate-700 font-heading">No payroll history yet</p>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                <p className="text-sm font-bold text-[#17151F]">No payroll history yet</p>
+                <p className="text-xs text-[#625E6E] mt-1 max-w-xs mx-auto">
                   Process your first payrun to see monthly trends.
                 </p>
                 <Link to="/payruns" className="btn-primary text-xs mt-3 px-3 py-1.5 inline-flex">
@@ -316,20 +312,20 @@ export function PayrollDashboard() {
                 const gross = Number(m.total_gross || 0);
                 const label = m.name || m.period_start?.slice(0, 7) || `Run #${m.id}`;
                 return (
-                  <div key={m.id || label} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-300 transition-all space-y-2">
+                  <div key={m.id || label} className="p-3.5 rounded-xl bg-white border border-[#E7E5EF] hover:border-[#6C3FF5]/40 transition-all space-y-2 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 text-xs tracking-tight font-heading">{label}</span>
-                      <span className="text-blue-600 font-extrabold text-sm">₹{net.toLocaleString('en-IN')}</span>
+                      <span className="font-bold text-[#17151F] text-xs tracking-tight">{label}</span>
+                      <span className="text-[#6C3FF5] font-extrabold text-sm">₹{net.toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[#E7E5EF] h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-blue-600 h-full rounded-full transition-all duration-500"
+                        className="bg-[#6C3FF5] h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (net / (kpis.totalNetPaid || net || 1)) * 100)}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-slate-500 font-medium pt-0.5">
+                    <div className="flex justify-between text-xs text-[#625E6E] font-medium pt-0.5">
                       <span>Gross: ₹{gross.toLocaleString('en-IN')}</span>
-                      <span className="text-slate-700 font-semibold capitalize">{m.status}</span>
+                      <span className="text-[#17151F] font-semibold capitalize">{m.status}</span>
                     </div>
                   </div>
                 );
@@ -338,49 +334,49 @@ export function PayrollDashboard() {
           </div>
 
           {/* Quick Navigation links */}
-          <div className="pt-3 border-t border-slate-100">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 font-heading">Quick Actions</p>
+          <div className="pt-3 border-t border-[#E7E5EF]">
+            <p className="text-[11px] font-bold text-[#918C9F] uppercase tracking-wider mb-2">Quick Actions</p>
             <div className="grid grid-cols-2 gap-2">
-              <Link to="/employees" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+              <Link to="/employees" className="p-2.5 rounded-lg bg-[#F8F8FC] hover:bg-[#F1ECFF] text-[#17151F] text-xs font-semibold flex items-center justify-between transition-colors border border-[#DDD9E8]">
                 <span>Staff Directory</span>
-                <ArrowRight size={12} className="text-slate-400" />
+                <ArrowRight size={12} className="text-[#918C9F]" />
               </Link>
-              <Link to="/attendance" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+              <Link to="/attendance" className="p-2.5 rounded-lg bg-[#F8F8FC] hover:bg-[#F1ECFF] text-[#17151F] text-xs font-semibold flex items-center justify-between transition-colors border border-[#DDD9E8]">
                 <span>Attendance</span>
-                <ArrowRight size={12} className="text-slate-400" />
+                <ArrowRight size={12} className="text-[#918C9F]" />
               </Link>
-              <Link to="/time-off" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+              <Link to="/time-off" className="p-2.5 rounded-lg bg-[#F8F8FC] hover:bg-[#F1ECFF] text-[#17151F] text-xs font-semibold flex items-center justify-between transition-colors border border-[#DDD9E8]">
                 <span>Time Off</span>
-                <ArrowRight size={12} className="text-slate-400" />
+                <ArrowRight size={12} className="text-[#918C9F]" />
               </Link>
-              <Link to="/payslips" className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold flex items-center justify-between transition-colors border border-slate-200">
+              <Link to="/payslips" className="p-2.5 rounded-lg bg-[#F8F8FC] hover:bg-[#F1ECFF] text-[#17151F] text-xs font-semibold flex items-center justify-between transition-colors border border-[#DDD9E8]">
                 <span>Payslips Ledger</span>
-                <ArrowRight size={12} className="text-slate-400" />
+                <ArrowRight size={12} className="text-[#918C9F]" />
               </Link>
             </div>
           </div>
         </div>
 
         {/* Attendance Breakdown */}
-        <div className="card p-5 space-y-4">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
+        <div className="glass-card p-5 space-y-4">
+          <div className="border-b border-[#E7E5EF] pb-3">
+            <h3 className="font-bold text-[#17151F] text-base flex items-center gap-2">
               <CheckCircle2 size={17} className="text-emerald-600" />
               Attendance Health
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">Overall punch and punctuality rate</p>
+            <p className="text-xs text-[#625E6E] mt-0.5">Overall punch and punctuality rate</p>
           </div>
           <div className="flex items-center justify-center py-4">
             <div className="relative w-32 h-32">
               <div
                 className="w-32 h-32 rounded-full"
                 style={{
-                  background: `conic-gradient(#10b981 0% ${kpis.attendanceHealthPercent ?? 96}%, #f1f5f9 ${kpis.attendanceHealthPercent ?? 96}% 100%)`
+                  background: `conic-gradient(#16a34a 0% ${kpis.attendanceHealthPercent ?? 96}%, #F1ECFF ${kpis.attendanceHealthPercent ?? 96}% 100%)`
                 }}
               />
-              <div className="absolute inset-3 rounded-full bg-white flex items-center justify-center flex-col shadow-xs border border-slate-100">
-                <span className="text-2xl font-black text-emerald-600 font-heading">{kpis.attendanceHealthPercent ?? 96}%</span>
-                <span className="text-[10px] text-slate-500 font-medium">Health</span>
+              <div className="absolute inset-3 rounded-full bg-white flex items-center justify-center flex-col border border-[#E7E5EF] shadow-sm">
+                <span className="text-2xl font-black text-emerald-600">{kpis.attendanceHealthPercent ?? 96}%</span>
+                <span className="text-[10px] text-[#625E6E] font-medium">Health</span>
               </div>
             </div>
           </div>
@@ -392,54 +388,54 @@ export function PayrollDashboard() {
             ].map((row) => (
               <div key={row.label} className="flex items-center gap-3 text-xs">
                 <span className={`w-2.5 h-2.5 rounded-full ${row.color} shrink-0`} />
-                <span className="text-slate-600 flex-1">{row.label}</span>
-                <span className="text-slate-900 font-bold">{row.pct}%</span>
+                <span className="text-[#625E6E] flex-1">{row.label}</span>
+                <span className="text-[#17151F] font-bold">{row.pct}%</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Payroll Intelligence Quick Launcher */}
-        <div className="card p-5 space-y-4 lg:col-span-2">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2 font-heading">
-              <Sparkles size={17} className="text-blue-600" />
+        <div className="glass-card p-5 space-y-4 lg:col-span-2">
+          <div className="border-b border-[#E7E5EF] pb-3">
+            <h3 className="font-bold text-[#17151F] text-base flex items-center gap-2">
+              <Sparkles size={17} className="text-[#6C3FF5]" />
               Payroll Intelligence
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">Active data sources and enterprise modules</p>
+            <p className="text-xs text-[#625E6E] mt-0.5">Active data sources and enterprise modules</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: 'Employees', icon: Users, to: '/employees', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
-              { label: 'Contracts', icon: FileText, to: '/contracts', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
-              { label: 'Attendance', icon: Clock, to: '/attendance', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' },
-              { label: 'Time Off', icon: Calendar, to: '/time-off', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-100' },
-              { label: 'Payruns', icon: DollarSign, to: '/payruns', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
-              { label: 'Payslips', icon: UserCheck, to: '/payslips', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
-              { label: 'Salary Config', icon: Sparkles, to: '/salary-config', color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
-              { label: 'Anomaly Engine', icon: ShieldAlert, to: '/payruns', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100' },
-              { label: 'AI Assistant', icon: Zap, to: null, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
+              { label: 'Employees', icon: Users, to: '/employees' },
+              { label: 'Contracts', icon: FileText, to: '/contracts' },
+              { label: 'Attendance', icon: Clock, to: '/attendance' },
+              { label: 'Time Off', icon: Calendar, to: '/time-off' },
+              { label: 'Payruns', icon: DollarSign, to: '/payruns' },
+              { label: 'Payslips', icon: UserCheck, to: '/payslips' },
+              { label: 'Salary Config', icon: Sparkles, to: '/salary-config' },
+              { label: 'Anomaly Engine', icon: ShieldAlert, to: '/payruns' },
+              { label: 'AI Assistant', icon: Zap, to: null },
             ].map((item) => (
               item.to ? (
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 transition-all group text-center shadow-2xs"
+                  className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border border-[#E7E5EF] bg-white hover:border-[#6C3FF5] hover:bg-[#F8F5FF] transition-all group text-center shadow-sm"
                 >
-                  <div className={`p-2.5 rounded-xl border ${item.bg} ${item.color} group-hover:scale-105 transition-transform`}>
+                  <div className="p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F1ECFF] text-[#6C3FF5] group-hover:scale-105 transition-transform">
                     <item.icon size={18} />
                   </div>
-                  <span className="text-xs text-slate-700 group-hover:text-blue-600 transition-colors font-semibold">{item.label}</span>
+                  <span className="text-xs text-[#17151F] group-hover:text-[#6C3FF5] transition-colors font-semibold">{item.label}</span>
                 </Link>
               ) : (
                 <div
                   key={item.label}
-                  className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50/50 transition-all text-center shadow-2xs cursor-default"
+                  className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border border-[#E7E5EF] bg-white transition-all text-center cursor-default shadow-sm"
                 >
-                  <div className={`p-2.5 rounded-xl border ${item.bg} ${item.color}`}>
+                  <div className="p-2.5 rounded-xl border border-[#DDD9E8] bg-[#F1ECFF] text-[#6C3FF5]">
                     <item.icon size={18} />
                   </div>
-                  <span className="text-xs text-slate-600 font-semibold">{item.label}</span>
+                  <span className="text-xs text-[#17151F] font-semibold">{item.label}</span>
                 </div>
               )
             ))}
