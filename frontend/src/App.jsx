@@ -13,6 +13,7 @@ import { ScheduleList } from './pages/Schedules/ScheduleList';
 import { AttendanceList } from './pages/Attendance/AttendanceList';
 import { AttendanceDetail } from './pages/Attendance/AttendanceDetail';
 import { TimeOffRequests } from './pages/TimeOff/TimeOffRequests';
+import { TimeOffRequestDetail } from './pages/TimeOff/TimeOffRequestDetail';
 import { SalaryStructures } from './pages/SalaryConfig/SalaryStructures';
 import { PayrunList } from './pages/Payroll/PayrunList';
 import { PayrunDetail } from './pages/Payroll/PayrunDetail';
@@ -80,6 +81,8 @@ export default function App() {
               <Route path="attendance/:attendanceId" element={<AttendanceDetail />} />
               <Route path="employees/:employeeId/attendance" element={<AttendanceList />} />
               <Route path="time-off" element={<TimeOffRequests />} />
+              <Route path="time-off/requests" element={<TimeOffRequests />} />
+              <Route path="time-off/requests/:requestId" element={<TimeOffRequestDetail />} />
               <Route path="payruns" element={<PayrunList />} />
               <Route path="payruns/:id" element={<PayrunDetail />} />
               <Route path="payslips" element={<PayslipList />} />
