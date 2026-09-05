@@ -20,10 +20,10 @@ export function DashboardLayout() {
   const [personaMenuOpen, setPersonaMenuOpen] = useState(false);
 
   const personas = [
-    { role: 'Admin', name: 'Arjun Mehta', email: 'admin@peoplepay360.com', badge: 'Full Admin' },
-    { role: 'HR Payroll Admin', name: 'Vikram Malhotra', email: 'payroll.admin@peoplepay360.com', badge: 'Payroll Lead' },
-    { role: 'HR Payroll User', name: 'Ananya Sen', email: 'payroll.user@peoplepay360.com', badge: 'Payroll Ops' },
-    { role: 'HR Manager', name: 'Priya Patel', email: 'hr.manager@peoplepay360.com', badge: 'People Ops' },
+    { role: 'Admin', name: 'Vikram Verma', email: 'admin@peoplepay360.com', badge: 'Full Admin' },
+    { role: 'HR Payroll Admin', name: 'Amit Singh', email: 'amit.singh@peoplepay360.com', badge: 'Payroll Lead' },
+    { role: 'HR Payroll User', name: 'Neha Gupta', email: 'neha.gupta@peoplepay360.com', badge: 'Payroll Ops' },
+    { role: 'HR Manager', name: 'Priya Patel', email: 'priya.patel@peoplepay360.com', badge: 'People Ops' },
     { role: 'Employee', name: 'Rahul Sharma', email: 'rahul.sharma@peoplepay360.com', badge: 'Self-Service' }
   ];
 
