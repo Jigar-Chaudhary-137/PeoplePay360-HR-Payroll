@@ -20,8 +20,9 @@ async function initDb() {
     });
 
     const dbName = process.env.DB_NAME || 'peoplepay360';
-    console.log(`🏗️ Creating database '${dbName}' if not exists...`);
-    await rootConnection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
+    console.log(`🏗️ Freshly initializing database '${dbName}'...`);
+    await rootConnection.query(`DROP DATABASE IF EXISTS \`${dbName}\`;`);
+    await rootConnection.query(`CREATE DATABASE \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
     await rootConnection.end();
 
     // 2. Connect with multipleStatements: true to run schema.sql and seed.sql

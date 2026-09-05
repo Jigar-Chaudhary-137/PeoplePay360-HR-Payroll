@@ -1,17 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const employeeController = require('../controllers/employeeController');
-<<<<<<< HEAD
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-
-router.use(authenticateToken);
-
-router.get('/', authorizeRoles('Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User'), employeeController.getEmployees);
-router.get('/:id', employeeController.getEmployeeById); // Supports Employee self-view with ID check
-router.post('/', authorizeRoles('Admin', 'HR Manager'), employeeController.createEmployee);
-router.put('/:id', authorizeRoles('Admin', 'HR Manager'), employeeController.updateEmployee);
-router.delete('/:id', authorizeRoles('Admin'), employeeController.deleteEmployee);
-=======
 const { authenticateToken } = require('../middleware/auth');
 const { requireRole, requireSelfOrRole } = require('../middleware/rbac');
 
@@ -27,6 +16,5 @@ router.get('/:id', requireSelfOrRole('HR Manager', 'HR Payroll Admin', 'HR Payro
 router.post('/', requireRole('HR Manager'), employeeController.createEmployee);
 router.put('/:id', requireRole('HR Manager'), employeeController.updateEmployee);
 router.delete('/:id', requireRole('HR Manager'), employeeController.deleteEmployee);
->>>>>>> feature/backend
 
 module.exports = router;

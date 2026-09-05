@@ -83,16 +83,23 @@ INSERT INTO time_off_types (id, name, unit, requires_allocation, requires_approv
 (3, 'Compensatory Off', 'Days', TRUE, TRUE, TRUE)
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
+-- 8b. Seed Work Locations
+INSERT INTO work_locations (id, name, address, latitude, longitude, radius_meters, status) VALUES
+(1, 'Bangalore Tech Park HQ', 'Prestige Tech Cloud, Hebbal, Bangalore, Karnataka 560092', 12.9715987, 77.5945627, 250.00, 'Active'),
+(2, 'Mumbai BKC Office', 'Bandra Kurla Complex, Bandra East, Mumbai, Maharashtra 400051', 19.0657100, 72.8683700, 200.00, 'Active')
+ON DUPLICATE KEY UPDATE name = VALUES(name);
+
 -- 9. Seed Employees
--- Rahul Sharma is the primary demo employee with 2 historical contracts!
+-- Rahul Sharma is assigned to Bangalore Tech Park HQ (work_location_id = 1)
+-- Vikas Mehta has NO work location configured (work_location_id = NULL) to verify fallback behavior!
 -- Neha Gupta has NULL bank details for testing warning detection!
-INSERT INTO employees (id, employee_code, first_name, last_name, email, phone, department_id, job_position_id, manager_id, working_schedule_id, employment_status, work_location, company, bank_name, bank_account_no, bank_ifsc, pan_no, avatar_url) VALUES
-(1, 'EMP001', 'Vikram', 'Verma', 'admin@peoplepay360.com', '+91 98765 43210', 1, 1, NULL, 1, 'Active', 'Bangalore HQ', 'PeoplePay360 Inc', 'HDFC Bank', '50100234567890', 'HDFC0001234', 'ABCDE1234F', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
-(2, 'EMP002', 'Rahul', 'Sharma', 'rahul.sharma@peoplepay360.com', '+91 98111 22233', 1, 1, 1, 1, 'Active', 'Bangalore HQ', 'PeoplePay360 Inc', 'State Bank of India', '30245678901234', 'SBIN0004567', 'BLWPS9876K', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
-(3, 'EMP003', 'Priya', 'Patel', 'priya.patel@peoplepay360.com', '+91 98222 33344', 2, 4, 1, 1, 'Active', 'Mumbai Office', 'PeoplePay360 Inc', 'ICICI Bank', '001205012345', 'ICIC0000012', 'CPRPP1122M', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
-(4, 'EMP004', 'Amit', 'Singh', 'amit.singh@peoplepay360.com', '+91 98333 44455', 3, 6, 1, 1, 'Active', 'Delhi Office', 'PeoplePay360 Inc', 'Axis Bank', '915010034567890', 'UTIB0000915', 'DKLPS3344N', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
-(5, 'EMP005', 'Neha', 'Gupta', 'neha.gupta@peoplepay360.com', '+91 98444 55566', 1, 3, 2, 1, 'Active', 'Bangalore HQ', 'PeoplePay360 Inc', NULL, NULL, NULL, 'EKFPG5566P', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150'),
-(6, 'EMP006', 'Vikas', 'Mehta', 'vikas.mehta@peoplepay360.com', '+91 98555 66677', 4, 8, 1, 1, 'Active', 'Pune Plant', 'PeoplePay360 Inc', 'Kotak Mahindra Bank', '6211234567', 'KKBK0000621', 'FLMPM7788Q', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150')
+INSERT INTO employees (id, employee_code, first_name, last_name, email, phone, department_id, job_position_id, manager_id, working_schedule_id, work_location_id, employment_status, work_location, company, bank_name, bank_account_no, bank_ifsc, pan_no, avatar_url) VALUES
+(1, 'EMP001', 'Vikram', 'Verma', 'admin@peoplepay360.com', '+91 98765 43210', 1, 1, NULL, 1, 1, 'Active', 'Bangalore HQ', 'PeoplePay360 Inc', 'HDFC Bank', '50100234567890', 'HDFC0001234', 'ABCDE1234F', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+(2, 'EMP002', 'Rahul', 'Sharma', 'rahul.sharma@peoplepay360.com', '+91 98111 22233', 1, 1, 1, 1, 1, 'Active', 'Bangalore HQ', 'PeoplePay360 Inc', 'State Bank of India', '30245678901234', 'SBIN0004567', 'BLWPS9876K', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+(3, 'EMP003', 'Priya', 'Patel', 'priya.patel@peoplepay360.com', '+91 98222 33344', 2, 4, 1, 1, 2, 'Active', 'Mumbai Office', 'PeoplePay360 Inc', 'ICICI Bank', '001205012345', 'ICIC0000012', 'CPRPP1122M', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+(4, 'EMP004', 'Amit', 'Singh', 'amit.singh@peoplepay360.com', '+91 98333 44455', 3, 6, 1, 1, 1, 'Active', 'Delhi Office', 'PeoplePay360 Inc', 'Axis Bank', '915010034567890', 'UTIB0000915', 'DKLPS3344N', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'),
+(5, 'EMP005', 'Neha', 'Gupta', 'neha.gupta@peoplepay360.com', '+91 98444 55566', 1, 3, 2, 1, 1, 'Active', 'Bangalore HQ', 'PeoplePay360 Inc', NULL, NULL, NULL, 'EKFPG5566P', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150'),
+(6, 'EMP006', 'Vikas', 'Mehta', 'vikas.mehta@peoplepay360.com', '+91 98555 66677', 4, 8, 1, 1, NULL, 'Active', 'Pune Plant', 'PeoplePay360 Inc', 'Kotak Mahindra Bank', '6211234567', 'KKBK0000621', 'FLMPM7788Q', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150')
 ON DUPLICATE KEY UPDATE first_name = VALUES(first_name);
 
 -- Update Department Managers
