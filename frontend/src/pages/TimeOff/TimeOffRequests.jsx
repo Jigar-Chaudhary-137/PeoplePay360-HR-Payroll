@@ -11,6 +11,7 @@ import { timeOffService } from '../../services/timeOffService';
 import TimeOffRequestTable from '../../components/timeoff/TimeOffRequestTable';
 import RequestTimeOffModal from '../../components/timeoff/RequestTimeOffModal';
 import ApprovalConfirmationModal from '../../components/timeoff/ApprovalConfirmationModal';
+import TimeOffNavigationTabs from '../../components/timeoff/TimeOffNavigationTabs';
 import { LoadingSpinner, EmptyState, StatCard } from '../../components/common/CommonUI';
 
 /**
@@ -153,6 +154,11 @@ export function TimeOffRequests() {
 
   return (
     <div className="space-y-6">
+      {/* Top Sub-Navigation Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <TimeOffNavigationTabs />
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/10">
         <div>

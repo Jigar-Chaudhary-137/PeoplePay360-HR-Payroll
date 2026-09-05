@@ -14,6 +14,8 @@ import { AttendanceList } from './pages/Attendance/AttendanceList';
 import { AttendanceDetail } from './pages/Attendance/AttendanceDetail';
 import { TimeOffRequests } from './pages/TimeOff/TimeOffRequests';
 import { TimeOffRequestDetail } from './pages/TimeOff/TimeOffRequestDetail';
+import { TimeOffTypes } from './pages/TimeOff/TimeOffTypes';
+import { TimeOffTypeDetail } from './pages/TimeOff/TimeOffTypeDetail';
 import { SalaryStructures } from './pages/SalaryConfig/SalaryStructures';
 import { PayrunList } from './pages/Payroll/PayrunList';
 import { PayrunDetail } from './pages/Payroll/PayrunDetail';
@@ -83,6 +85,8 @@ export default function App() {
               <Route path="time-off" element={<TimeOffRequests />} />
               <Route path="time-off/requests" element={<TimeOffRequests />} />
               <Route path="time-off/requests/:requestId" element={<TimeOffRequestDetail />} />
+              <Route path="time-off/types" element={<TimeOffTypes />} />
+              <Route path="time-off/types/:typeId" element={<TimeOffTypeDetail />} />
               <Route path="payruns" element={<PayrunList />} />
               <Route path="payruns/:id" element={<PayrunDetail />} />
               <Route path="payslips" element={<PayslipList />} />

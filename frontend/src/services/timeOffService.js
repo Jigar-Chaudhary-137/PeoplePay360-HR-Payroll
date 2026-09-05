@@ -1,8 +1,9 @@
-import { INITIAL_TIME_OFF_REQUESTS, MOCK_LEAVE_TYPES, MOCK_ALLOCATIONS, MOCK_EMPLOYEES } from '../data/timeOffMockData';
+import { INITIAL_TIME_OFF_REQUESTS, INITIAL_TIME_OFF_TYPES, MOCK_LEAVE_TYPES, MOCK_ALLOCATIONS, MOCK_EMPLOYEES } from '../data/timeOffMockData';
 import { timeOffAPI } from './api';
 
 // In-memory local state store for persistent mock interactions
 let localRequestsStore = [...INITIAL_TIME_OFF_REQUESTS];
+let localTimeOffTypesStore = [...INITIAL_TIME_OFF_TYPES];
 
 export const timeOffService = {
   /**
@@ -266,5 +267,172 @@ export const timeOffService = {
    */
   getEmployees() {
     return MOCK_EMPLOYEES;
+  },
+
+  /**
+   * Fetch Time Off Types with search & status filters
+   */
+  async getTimeOffTypes(filters = {}) {
+    let result = [...localTimeOffTypesStore];
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase().trim();
+      result = result.filter(
+        (t) =>
+          (t.name && t.name.toLowerCase().includes(q)) ||
+          (t.code && t.code.toLowerCase().includes(q)) ||
+          (t.unit && t.unit.toLowerCase().includes(q)) ||
+          (t.approval && t.approval.toLowerCase().includes(q)) ||
+          (t.payroll_work_entry && t.payroll_work_entry.toLowerCase().includes(q)) ||
+          (t.requires_allocation && t.requires_allocation.toLowerCase().includes(q))
+      );
+    }
+
+    if (filters.status && filters.status !== 'All') {
+      result = result.filter(
+        (t) => t.status.toLowerCase() === filters.status.toLowerCase()
+      );
+    }
+
+    // Simulated short delay
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    return { success: true, data: result, total: result.length };
+  },
+
+  /**
+   * Fetch single Time Off Type by ID
+   */
+  async getTimeOffTypeById(id) {
+    const item = localTimeOffTypesStore.find((t) => String(t.id) === String(id));
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    if (!item) {
+      return { success: false, error: 'Time off type not found' };
+    }
+
+    return { success: true, data: item };
+  },
+
+  /**
+   * Create a new Time Off Type
+   */
+  async createTimeOffType(payload) {
+    const colorMap = {
+      Blue: '#3B82F6',
+      Emerald: '#10B981',
+      Violet: '#8B5CF6',
+      Amber: '#F59E0B',
+      Rose: '#F43F5E',
+      Slate: '#64748B'
+    };
+
+    const is_active = payload.is_active !== undefined ? Boolean(payload.is_active) : (payload.status === 'Active');
+    const display_color = payload.display_color || 'Blue';
+
+    const newItem = {
+      id: Date.now(),
+      name: payload.name || 'New Time Off Type',
+      code: payload.code || (payload.name ? payload.name.slice(0, 4).toUpperCase() : 'TYPE'),
+      unit: payload.unit || 'Days',
+      requires_allocation: payload.requires_allocation || (payload.requires_allocation_bool ? 'Required' : 'No'),
+      requires_allocation_display: (payload.requires_allocation === 'Required' || payload.requires_allocation === 'Yes' || payload.requires_allocation_bool) ? 'Yes' : 'No',
+      approval: payload.approval || 'Manager',
+      status: is_active ? 'Active' : 'Inactive',
+      is_active: is_active,
+      active_display: is_active ? 'True' : 'False',
+      payroll_work_entry: payload.payroll_work_entry || 'Leave Work Entry',
+      display_color: display_color,
+      color_hex: colorMap[display_color] || '#3B82F6',
+      notes: payload.notes || ''
+    };
+
+    localTimeOffTypesStore = [...localTimeOffTypesStore, newItem];
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    return {
+      success: true,
+      data: newItem,
+      message: `Time off type "${newItem.name}" created successfully.`
+    };
+  },
+
+  /**
+   * Update an existing Time Off Type
+   */
+  async updateTimeOffType(id, payload) {
+    const index = localTimeOffTypesStore.findIndex((t) => String(t.id) === String(id));
+    if (index === -1) {
+      return { success: false, error: 'Time off type not found' };
+    }
+
+    const colorMap = {
+      Blue: '#3B82F6',
+      Emerald: '#10B981',
+      Violet: '#8B5CF6',
+      Amber: '#F59E0B',
+      Rose: '#F43F5E',
+      Slate: '#64748B'
+    };
+
+    const current = localTimeOffTypesStore[index];
+    const is_active = payload.is_active !== undefined
+      ? Boolean(payload.is_active)
+      : (payload.status !== undefined ? payload.status === 'Active' : current.is_active);
+
+    const display_color = payload.display_color || current.display_color;
+    const reqAlloc = payload.requires_allocation !== undefined ? payload.requires_allocation : current.requires_allocation;
+
+    const updatedItem = {
+      ...current,
+      name: payload.name !== undefined ? payload.name : current.name,
+      code: payload.code !== undefined ? payload.code : current.code,
+      unit: payload.unit !== undefined ? payload.unit : current.unit,
+      requires_allocation: reqAlloc,
+      requires_allocation_display: (reqAlloc === 'Required' || reqAlloc === 'Yes') ? 'Yes' : 'No',
+      approval: payload.approval !== undefined ? payload.approval : current.approval,
+      status: is_active ? 'Active' : 'Inactive',
+      is_active: is_active,
+      active_display: is_active ? 'True' : 'False',
+      payroll_work_entry: payload.payroll_work_entry !== undefined ? payload.payroll_work_entry : current.payroll_work_entry,
+      display_color: display_color,
+      color_hex: colorMap[display_color] || current.color_hex,
+      notes: payload.notes !== undefined ? payload.notes : current.notes
+    };
+
+    localTimeOffTypesStore[index] = updatedItem;
+    await new Promise((resolve) => setTimeout(resolve, 180));
+
+    return {
+      success: true,
+      data: updatedItem,
+      message: `Time off type "${updatedItem.name}" updated successfully.`
+    };
+  },
+
+  /**
+   * Toggle Active / Inactive status of a Time Off Type
+   */
+  async toggleTimeOffTypeStatus(id) {
+    const index = localTimeOffTypesStore.findIndex((t) => String(t.id) === String(id));
+    if (index === -1) {
+      return { success: false, error: 'Time off type not found' };
+    }
+
+    const current = localTimeOffTypesStore[index];
+    const nextIsActive = !current.is_active;
+
+    localTimeOffTypesStore[index] = {
+      ...current,
+      is_active: nextIsActive,
+      status: nextIsActive ? 'Active' : 'Inactive',
+      active_display: nextIsActive ? 'True' : 'False'
+    };
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    return {
+      success: true,
+      data: localTimeOffTypesStore[index],
+      message: `Status updated to ${nextIsActive ? 'Active' : 'Inactive'}.`
+    };
   }
 };

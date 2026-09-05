@@ -10,6 +10,89 @@ export const MOCK_LEAVE_TYPES = [
   { id: 5, name: 'Unpaid Leave', code: 'UNPAID', is_paid: false, color: '#64748B', max_days: null }
 ];
 
+export const INITIAL_TIME_OFF_TYPES = [
+  {
+    id: 1,
+    name: 'Paid Time Off',
+    code: 'PTO',
+    unit: 'Days',
+    requires_allocation: 'Required',
+    requires_allocation_display: 'Yes',
+    approval: 'Manager',
+    status: 'Active',
+    is_active: true,
+    active_display: 'True',
+    payroll_work_entry: 'Leave Work Entry',
+    display_color: 'Blue',
+    color_hex: '#3B82F6',
+    notes: 'Standard annual leave. Balance comes from approved allocations.'
+  },
+  {
+    id: 2,
+    name: 'Sick Leave',
+    code: 'SL',
+    unit: 'Days',
+    requires_allocation: 'No',
+    requires_allocation_display: 'No',
+    approval: 'Manager',
+    status: 'Active',
+    is_active: true,
+    active_display: 'True',
+    payroll_work_entry: 'Leave Work Entry',
+    display_color: 'Emerald',
+    color_hex: '#10B981',
+    notes: 'Used for medical and illness-related absences. Medical certificate required for extended leaves exceeding 2 consecutive days.'
+  },
+  {
+    id: 3,
+    name: 'Comp Off',
+    code: 'COMP',
+    unit: 'Hours',
+    requires_allocation: 'Required',
+    requires_allocation_display: 'Yes',
+    approval: 'Officer',
+    status: 'Active',
+    is_active: true,
+    active_display: 'True',
+    payroll_work_entry: 'Leave Work Entry',
+    display_color: 'Violet',
+    color_hex: '#8B5CF6',
+    notes: 'Compensatory time off granted in exchange for verified overtime or weekend project support.'
+  },
+  {
+    id: 4,
+    name: 'Casual Leave',
+    code: 'CL',
+    unit: 'Days',
+    requires_allocation: 'Required',
+    requires_allocation_display: 'Yes',
+    approval: 'Manager',
+    status: 'Active',
+    is_active: true,
+    active_display: 'True',
+    payroll_work_entry: 'Leave Work Entry',
+    display_color: 'Amber',
+    color_hex: '#F59E0B',
+    notes: 'Short-duration leaves for personal, urgent, or unforeseen matters.'
+  },
+  {
+    id: 5,
+    name: 'Unpaid Leave',
+    code: 'UNP',
+    unit: 'Days',
+    requires_allocation: 'No',
+    requires_allocation_display: 'No',
+    approval: 'Manager',
+    status: 'Inactive',
+    is_active: false,
+    active_display: 'False',
+    payroll_work_entry: 'Unpaid Work Entry',
+    display_color: 'Slate',
+    color_hex: '#64748B',
+    notes: 'Leave without compensation when all allocated paid leave quotas are depleted.'
+  }
+];
+
 export const MOCK_ALLOCATIONS = {
   1: { // Aarav Mehta
     'Paid Time Off': { allocated: 24, used: 6, remaining: 18, allocation_name: 'Paid Time Off 2026' },
