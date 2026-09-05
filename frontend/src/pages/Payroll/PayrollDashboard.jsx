@@ -80,7 +80,7 @@ export function PayrollDashboard() {
       {/* Top Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E5EF]">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#17151F]">
+          <h1 className="page-title">
             Payroll Operations
           </h1>
           <p className="text-sm text-[#625E6E] mt-0.5">

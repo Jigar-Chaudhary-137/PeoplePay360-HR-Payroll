@@ -61,9 +61,9 @@ export function EmployeeList() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E5EF] pb-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#17151F] flex items-center gap-2.5">
+          <h1 className="page-title flex items-center gap-2.5">
             Employees
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#F1ECFF] text-[#6C3FF5] border border-[#DDD9E8] font-bold">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#F3E8FF] text-[#6D28D9] border border-[#E5E7EB] font-bold">
               {employees.length} Staff
             </span>
           </h1>

@@ -87,8 +87,8 @@ export function EmployeePortal() {
       <div className="glass-card p-6 bg-gradient-to-r from-[#F1ECFF] via-white to-[#F8F5FF] border-[#DDD9E8] shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="text-xs uppercase font-bold tracking-wider text-[#6C3FF5]">Employee Self-Service Portal</span>
-            <h1 className="text-2xl xl:text-3xl font-bold text-[#17151F] mt-1">
+            <span className="text-xs uppercase font-bold tracking-wider text-[#6D28D9]">Employee Self-Service Portal</span>
+            <h1 className="page-title mt-1">
               Welcome back, {user?.first_name} {user?.last_name}
             </h1>
             <p className="text-sm text-[#625E6E] mt-1">

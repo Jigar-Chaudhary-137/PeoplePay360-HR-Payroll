@@ -112,7 +112,7 @@ export function AttendanceListPage() {
       <div className="flex flex-col gap-4 border-b border-[#E7E5EF] pb-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#17151F]">
+            <h1 className="page-title">
               Attendance
             </h1>
             <p className="text-sm text-[#625E6E] mt-0.5">
