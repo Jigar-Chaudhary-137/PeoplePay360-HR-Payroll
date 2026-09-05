@@ -1,11 +1,16 @@
 {
   "name": "peoplepay360-backend",
   "version": "1.0.0",
+<<<<<<< HEAD
   "description": "Intelligent HR & Payroll Operations Platform Backend",
+=======
+  "description": "PeoplePay360 HR & Payroll Platform Backend",
+>>>>>>> feature/backend
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+<<<<<<< HEAD
     "seed": "node src/db/seed.js"
   },
   "dependencies": {
@@ -14,6 +19,16 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
+=======
+    "db:init": "node src/db/initDb.js",
+    "test": "node test/testBackend.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+>>>>>>> feature/backend
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "mysql2": "^3.12.0",

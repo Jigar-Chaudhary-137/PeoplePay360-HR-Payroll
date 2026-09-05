@@ -1,10 +1,20 @@
 const mysql = require('mysql2/promise');
+<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const dbConfig = {
   host: process.env.DB_HOST || '127.0.0.1',
+=======
+const dotenv = require('dotenv');
+const path = require('path');
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+>>>>>>> feature/backend
   port: parseInt(process.env.DB_PORT || '3306', 10),
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
@@ -12,6 +22,7 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 15,
   queueLimit: 0,
+<<<<<<< HEAD
   decimalNumbers: true
 };
 
@@ -83,12 +94,45 @@ async function withTransaction(callback) {
     throw error;
   } finally {
     connection.release();
+=======
+  dateStrings: true,
+  decimalNumbers: true
+});
+
+// Helper for executing parameterized queries
+async function query(sql, params = []) {
+  const [rows] = await pool.query(sql, params);
+  return rows;
+}
+
+// Helper to acquire a transactional connection
+async function getTransactionConnection() {
+  const connection = await pool.getConnection();
+  await connection.beginTransaction();
+  return connection;
+}
+
+// Test connectivity
+async function testConnection() {
+  try {
+    const [result] = await pool.query('SELECT 1 + 1 AS solution');
+    return { ok: true, solution: result[0].solution };
+  } catch (error) {
+    return { ok: false, error: error.message };
+>>>>>>> feature/backend
   }
 }
 
 module.exports = {
+<<<<<<< HEAD
   initDatabase,
   getPool,
   query,
   withTransaction
+=======
+  pool,
+  query,
+  getTransactionConnection,
+  testConnection
+>>>>>>> feature/backend
 };

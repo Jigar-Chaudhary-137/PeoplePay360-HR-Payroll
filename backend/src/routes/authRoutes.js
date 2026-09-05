@@ -5,6 +5,9 @@ const { authenticateToken } = require('../middleware/auth');
 
 router.post('/login', authController.login);
 router.get('/me', authenticateToken, authController.getMe);
+<<<<<<< HEAD
 router.post('/switch-demo-role', authController.switchDemoRole);
+=======
+>>>>>>> feature/backend
 
 module.exports = router;
