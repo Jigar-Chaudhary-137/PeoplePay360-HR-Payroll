@@ -186,7 +186,7 @@ export default function TimeOffRequestTable({
                   {/* Actions */}
                   <td className="text-right whitespace-nowrap">
                     <div
-                      className="flex items-center justify-end gap-2"
+                      className="flex items-center justify-end gap-3"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* HR Quick Approval Buttons for Pending Requests */}
