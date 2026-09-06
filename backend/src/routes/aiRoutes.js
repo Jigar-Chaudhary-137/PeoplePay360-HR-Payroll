@@ -6,5 +6,6 @@ const { authenticateToken } = require('../middleware/auth');
 router.use(authenticateToken);
 
 router.post('/ask', aiController.askAI);
+router.post('/query', aiController.askAI);
 
 module.exports = router;

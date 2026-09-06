@@ -88,6 +88,25 @@ export function AttendanceListPage() {
     setSelectedStatus('All');
   };
 
+  const handleEntrySuccess = (newOrUpdatedRecord) => {
+    setCurrentPage(1);
+    if (newOrUpdatedRecord) {
+      if (selectedDate && newOrUpdatedRecord.date && selectedDate !== newOrUpdatedRecord.date) {
+        setSelectedDate('');
+      }
+      if (selectedStatus && selectedStatus !== 'All' && newOrUpdatedRecord.status && selectedStatus !== newOrUpdatedRecord.status) {
+        setSelectedStatus('All');
+      }
+      if (selectedEmployee && !employeeId && newOrUpdatedRecord.employee_id && String(selectedEmployee) !== String(newOrUpdatedRecord.employee_id)) {
+        setSelectedEmployee('');
+      }
+      if (search) {
+        setSearch('');
+      }
+    }
+    fetchAttendance();
+  };
+
   const hasActiveFilters = Boolean(
     search || selectedDate || (selectedEmployee && !employeeId) || (selectedStatus && selectedStatus !== 'All')
   );
@@ -308,7 +327,7 @@ export function AttendanceListPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         record={editingRecord}
-        onSuccess={fetchAttendance}
+        onSuccess={handleEntrySuccess}
       />
     </div>
   );

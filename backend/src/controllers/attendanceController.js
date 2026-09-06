@@ -83,10 +83,10 @@ function computeWorkedHours(checkIn, checkOut, breakHours = 1.0, inDate = null, 
 
 async function getAttendance(req, res, next) {
   try {
-    const { employee_id, start_date, end_date, status } = req.query;
+    const { employee_id, start_date, end_date, date, status, search } = req.query;
     let sql = `
       SELECT a.*, 
-             e.first_name, e.last_name, e.employee_code,
+             e.first_name, e.last_name, e.employee_code, e.avatar_url,
              d.name AS department_name
       FROM attendance a
       JOIN employees e ON a.employee_id = e.id
@@ -99,24 +99,39 @@ async function getAttendance(req, res, next) {
     if (req.user.role === 'Employee' && req.user.employee_id) {
       sql += ' AND a.employee_id = ?';
       params.push(req.user.employee_id);
-    } else if (employee_id) {
+    } else if (employee_id && employee_id !== 'All' && employee_id !== 'all' && String(employee_id).trim() !== '') {
       sql += ' AND a.employee_id = ?';
       params.push(employee_id);
     }
 
-    if (start_date) {
-      sql += ' AND a.date >= ?';
-      params.push(start_date);
+    if (date && String(date).trim() !== '') {
+      sql += ' AND a.date = ?';
+      params.push(String(date).trim());
+    } else {
+      if (start_date && String(start_date).trim() !== '') {
+        sql += ' AND a.date >= ?';
+        params.push(String(start_date).trim());
+      }
+      if (end_date && String(end_date).trim() !== '') {
+        sql += ' AND a.date <= ?';
+        params.push(String(end_date).trim());
+      }
     }
 
-    if (end_date) {
-      sql += ' AND a.date <= ?';
-      params.push(end_date);
+    if (status && status !== 'All' && status !== 'all' && String(status).trim() !== '') {
+      sql += ' AND LOWER(a.status) = LOWER(?)';
+      params.push(String(status).trim());
     }
 
-    if (status) {
-      sql += ' AND a.status = ?';
-      params.push(status);
+    if (search && String(search).trim() !== '') {
+      const searchPattern = `%${String(search).trim()}%`;
+      sql += ` AND (
+        CONCAT(e.first_name, ' ', e.last_name) LIKE ?
+        OR e.employee_code LIKE ?
+        OR d.name LIKE ?
+        OR a.notes LIKE ?
+      )`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
     sql += ' ORDER BY a.date DESC, e.first_name ASC';
@@ -218,6 +233,12 @@ async function checkIn(req, res, next) {
       data: updated
     });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY' || (error.message && error.message.includes('unique_emp_date'))) {
+      return res.status(400).json({
+        success: false,
+        message: 'Attendance already exists for this employee on this date.'
+      });
+    }
     next(error);
   }
 }
@@ -301,11 +322,27 @@ async function checkOut(req, res, next) {
 async function updateAttendance(req, res, next) {
   try {
     const { id } = req.params;
-    const { check_in, check_out, break_hours, status, notes } = req.body;
+    const { date, check_in, check_out, break_hours, status, notes } = req.body;
 
     const [existing] = await query('SELECT * FROM attendance WHERE id = ?', [id]);
     if (!existing) {
       return res.status(404).json({ success: false, message: `Attendance record ${id} not found.` });
+    }
+
+    let targetDate = existing.date;
+    if (date) {
+      const cleanDate = typeof date === 'string' ? date.split('T')[0] : getLocalDateString(new Date(date));
+      const [conflict] = await query(
+        'SELECT id FROM attendance WHERE employee_id = ? AND date = ? AND id != ?',
+        [existing.employee_id, cleanDate, id]
+      );
+      if (conflict) {
+        return res.status(400).json({
+          success: false,
+          message: 'Attendance already exists for this employee on this date.'
+        });
+      }
+      targetDate = cleanDate;
     }
 
     const newIn = check_in || existing.check_in;
@@ -314,11 +351,12 @@ async function updateAttendance(req, res, next) {
 
     let workedHours = existing.worked_hours;
     if (newIn && newOut) {
-      workedHours = computeWorkedHours(newIn, newOut, newBreak);
+      workedHours = computeWorkedHours(newIn, newOut, newBreak, targetDate, targetDate);
     }
 
     await query(
       `UPDATE attendance SET
+        date = ?,
         check_in = ?,
         check_out = ?,
         break_hours = ?,
@@ -326,18 +364,33 @@ async function updateAttendance(req, res, next) {
         status = COALESCE(?, status),
         notes = COALESCE(?, notes)
        WHERE id = ?`,
-      [newIn, newOut, newBreak, workedHours, status, notes, id]
+      [targetDate, newIn, newOut, newBreak, workedHours, status, notes, id]
     );
 
     await logAudit(req.user.id, 'ATTENDANCE_MANUAL_CORRECTION', 'attendance', id, req.body);
 
-    const [updated] = await query('SELECT * FROM attendance WHERE id = ?', [id]);
+    const [updated] = await query(
+      `SELECT a.*, 
+              e.first_name, e.last_name, e.employee_code, e.avatar_url,
+              d.name AS department_name
+       FROM attendance a
+       JOIN employees e ON a.employee_id = e.id
+       LEFT JOIN departments d ON e.department_id = d.id
+       WHERE a.id = ?`,
+      [id]
+    );
     return res.json({
       success: true,
       message: 'Attendance record updated successfully.',
       data: updated
     });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY' || (error.message && error.message.includes('unique_emp_date'))) {
+      return res.status(400).json({
+        success: false,
+        message: 'Attendance already exists for this employee on this date.'
+      });
+    }
     next(error);
   }
 }
@@ -380,7 +433,7 @@ async function getAttendanceById(req, res, next) {
     const { id } = req.params;
     const [record] = await query(
       `SELECT a.*, 
-              e.first_name, e.last_name, e.employee_code,
+              e.first_name, e.last_name, e.employee_code, e.avatar_url,
               d.name AS department_name
        FROM attendance a
        JOIN employees e ON a.employee_id = e.id
@@ -403,16 +456,61 @@ async function createAttendance(req, res, next) {
     if (!employee_id || !date) {
       return res.status(400).json({ success: false, message: 'Employee ID and date are required.' });
     }
-    const workedHours = (check_in && check_out) ? computeWorkedHours(check_in, check_out, break_hours) : 0;
+
+    const cleanDate = typeof date === 'string' ? date.split('T')[0] : getLocalDateString(new Date(date));
+
+    // Check whether an attendance record already exists for this employee and date
+    const [existing] = await query(
+      'SELECT id FROM attendance WHERE employee_id = ? AND date = ?',
+      [employee_id, cleanDate]
+    );
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: 'Attendance already exists for this employee on this date.'
+      });
+    }
+
+    let workedHours = 0;
+    if (check_in && check_out) {
+      const duration = computeAttendanceDuration(check_in, check_out, cleanDate, cleanDate, break_hours);
+      if (!duration.valid) {
+        return res.status(400).json({
+          success: false,
+          message: duration.message || 'Check-out time must be later than check-in time.'
+        });
+      }
+      workedHours = duration.workedHours;
+    }
+
+    const cleanIn = check_in ? getCleanTime(check_in) : null;
+    const cleanOut = check_out ? getCleanTime(check_out) : null;
+
     const result = await query(
       `INSERT INTO attendance (employee_id, date, check_in, check_out, break_hours, worked_hours, status, notes)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [employee_id, date, check_in || null, check_out || null, break_hours, workedHours, status, notes || null]
+      [employee_id, cleanDate, cleanIn, cleanOut, break_hours, workedHours, status, notes || null]
     );
-    const [created] = await query('SELECT * FROM attendance WHERE id = ?', [result.insertId]);
+    const [created] = await query(
+      `SELECT a.*, 
+              e.first_name, e.last_name, e.employee_code, e.avatar_url,
+              d.name AS department_name
+       FROM attendance a
+       JOIN employees e ON a.employee_id = e.id
+       LEFT JOIN departments d ON e.department_id = d.id
+       WHERE a.id = ?`,
+      [result.insertId]
+    );
     await logAudit(req.user.id, 'ATTENDANCE_MANUAL_CREATE', 'attendance', result.insertId, req.body);
     return res.status(201).json({ success: true, message: 'Attendance record created successfully.', data: created });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY' || (error.message && error.message.includes('unique_emp_date'))) {
+      return res.status(400).json({
+        success: false,
+        message: 'Attendance already exists for this employee on this date.'
+      });
+    }
     next(error);
   }
 }

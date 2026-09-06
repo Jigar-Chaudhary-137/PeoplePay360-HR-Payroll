@@ -109,15 +109,14 @@ export const ManualCorrectionModal = ({
         employee_code: emp.code,
         department: emp.department
       }));
+      setErrors((prev) => ({ ...prev, date: '', general: '' }));
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
+    setErrors((prev) => ({ ...prev, [name]: '', general: '' }));
   };
 
   const validate = () => {
@@ -175,7 +174,17 @@ export const ManualCorrectionModal = ({
         }
       }
     } catch (err) {
-      showToast(err.message || 'An error occurred while saving', 'error');
+      const msg = err.message || 'An error occurred while saving';
+      showToast(msg, 'error');
+      if (msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('duplicate')) {
+        setErrors((prev) => ({
+          ...prev,
+          date: 'Attendance already exists for this employee on this date.',
+          general: 'Attendance already exists for this employee on this date.'
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: msg }));
+      }
     } finally {
       setLoading(false);
     }
@@ -213,6 +222,14 @@ export const ManualCorrectionModal = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Duplicate Attendance / Error Banner */}
+          {errors.general && (
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-xs text-rose-700 font-medium animate-in fade-in duration-150">
+              <AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
+              <span>{errors.general}</span>
+            </div>
+          )}
+
           {/* Employee Select */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">

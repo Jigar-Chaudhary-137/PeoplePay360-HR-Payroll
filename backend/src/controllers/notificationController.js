@@ -20,8 +20,18 @@ async function markAllRead(req, res) {
   return res.json({ success: true, message: 'All notifications marked as read.' });
 }
 
+async function getUnreadCount(req, res) {
+  const userId = req.user.id;
+  const [result] = await query(
+    'SELECT COUNT(*) as unreadCount FROM notifications WHERE user_id = ? AND is_read = FALSE',
+    [userId]
+  );
+  return res.json({ success: true, data: { unreadCount: result ? result.unreadCount : 0 } });
+}
+
 module.exports = {
   getNotifications,
+  getUnreadCount,
   markAsRead,
   markAllRead
 };

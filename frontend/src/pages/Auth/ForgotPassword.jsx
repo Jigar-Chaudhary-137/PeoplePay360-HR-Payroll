@@ -5,6 +5,7 @@ import { TextInput } from '../../components/common/TextInput';
 import { Button } from '../../components/common/Button';
 import { FormMessage } from '../../components/common/FormMessage';
 import { Mail, ArrowLeft, CheckCircle2, Shield, RefreshCw } from 'lucide-react';
+import { authAPI } from '../../services/api';
 
 /**
  * Enterprise Forgot Password Page for PeoplePay360
@@ -56,25 +57,27 @@ export function ForgotPassword() {
     setServerError('');
 
     try {
-      // Mock / Contract placeholder request for password reset
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const res = await authAPI.forgotPassword({ email: email.trim() });
 
-      // Always show success view to prevent account enumeration attacks
-      setIsSubmitted(true);
-      setResendCooldown(30);
+      if (res.success) {
+        setIsSubmitted(true);
+        setResendCooldown(30);
 
-      // Start countdown timer for resend
-      const timer = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+        // Start countdown timer for resend
+        const timer = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        setServerError(res.message || 'Failed to send reset link. Please try again.');
+      }
     } catch (err) {
-      setServerError('An unexpected error occurred while processing your request. Please try again later.');
+      setServerError(err.message || 'An unexpected error occurred while processing your request. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -86,19 +89,23 @@ export function ForgotPassword() {
     setServerError('');
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setResendCooldown(30);
-      const timer = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      const res = await authAPI.forgotPassword({ email: email.trim() });
+      if (res.success) {
+        setResendCooldown(30);
+        const timer = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        setServerError(res.message || 'Failed to resend reset email.');
+      }
     } catch (err) {
-      setServerError('Failed to resend reset email. Please try again.');
+      setServerError(err.message || 'Failed to resend reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }

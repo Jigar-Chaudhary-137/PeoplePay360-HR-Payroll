@@ -10,6 +10,7 @@ function formatAttendanceRecord(r) {
     employee_name: empName,
     employee_code: r.employee_code || r.emp_code || '',
     department: r.department_name || r.department || 'General',
+    avatar: r.avatar_url || r.avatar || null,
     manager_name: r.manager_name || 'Manager'
   };
 }
@@ -19,8 +20,24 @@ export const attendanceService = {
    * Fetch attendance list with search, date, employee, and status filters directly from DB
    */
   async getAttendanceList(filters = {}) {
-    const res = await attendanceAPI.getAll(filters);
-    const list = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+    const cleanParams = {};
+    if (filters.search && typeof filters.search === 'string' && filters.search.trim()) {
+      cleanParams.search = filters.search.trim();
+    }
+    if (filters.date && typeof filters.date === 'string' && filters.date.trim()) {
+      cleanParams.date = filters.date.trim();
+    }
+    if (filters.employee_id && String(filters.employee_id).trim() && filters.employee_id !== 'All' && filters.employee_id !== 'all') {
+      cleanParams.employee_id = String(filters.employee_id).trim();
+    }
+    if (filters.status && filters.status !== 'All' && filters.status !== 'all' && typeof filters.status === 'string' && filters.status.trim()) {
+      cleanParams.status = filters.status.trim();
+    }
+
+    const res = await attendanceAPI.getAll(cleanParams);
+    const list = Array.isArray(res?.data) 
+      ? res.data 
+      : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []));
     const formatted = list.map(formatAttendanceRecord);
     return {
       success: true,

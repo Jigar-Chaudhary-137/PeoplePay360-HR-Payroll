@@ -120,6 +120,21 @@ export const AttendanceTable = ({ records = [], loading = false, onRowClick }) =
     }
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const clean = dateStr.includes('T') ? dateStr.split('T')[0] : (dateStr.includes(' ') ? dateStr.split(' ')[0] : dateStr);
+      const [y, m, d] = clean.split('-');
+      if (y && m && d) {
+        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        return dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      }
+      return clean;
+    } catch {
+      return dateStr;
+    }
+  };
+
   const formatClockTime = (timeStr) => {
     if (!timeStr) return '—';
     // If it contains space or T, get the HH:mm
@@ -143,11 +158,14 @@ export const AttendanceTable = ({ records = [], loading = false, onRowClick }) =
 
   return (
     <div style={{ width: '100%', overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '680px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '760px' }}>
         <thead>
           <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
             <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Employee
+            </th>
+            <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Date
             </th>
             <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Check In
@@ -167,7 +185,7 @@ export const AttendanceTable = ({ records = [], loading = false, onRowClick }) =
         <tbody>
           {records.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ padding: '3rem 1.5rem', textAlign: 'center', color: '#64748B' }}>
+              <td colSpan={7} style={{ padding: '3rem 1.5rem', textAlign: 'center', color: '#64748B' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                   <AlertCircle size={32} color="#94A3B8" />
                   <span style={{ fontSize: '0.9375rem', fontWeight: 500 }}>No attendance records found for the selected filters.</span>
@@ -223,6 +241,11 @@ export const AttendanceTable = ({ records = [], loading = false, onRowClick }) =
                       </div>
                     </div>
                   </div>
+                </td>
+
+                {/* Date Column */}
+                <td style={{ padding: '0.875rem 1.25rem', fontSize: '0.875rem', color: '#334155', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  {formatDate(row.date)}
                 </td>
 
                 {/* Check In Column */}

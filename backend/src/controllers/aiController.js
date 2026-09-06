@@ -139,7 +139,7 @@ function generateContextualAnswer(question, context) {
 
 async function askAI(req, res, next) {
   try {
-    const { question } = req.body;
+    const question = req.body.question || req.body.query;
     if (!question || !question.trim()) {
       return res.status(400).json({ success: false, message: 'Question prompt is required.' });
     }

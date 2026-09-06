@@ -5,6 +5,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { Login } from './pages/Auth/Login';
 import { ForgotPassword } from './pages/Auth/ForgotPassword';
+import { ResetPassword } from './pages/Auth/ResetPassword';
 import { PayrollDashboard } from './pages/Payroll/PayrollDashboard';
 import { EmployeeList } from './pages/Employees/EmployeeList';
 import { EmployeeDetail } from './pages/Employees/EmployeeDetail';
@@ -63,6 +64,7 @@ export default function App() {
             {/* Public Authentication Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected App Routes */}
             <Route

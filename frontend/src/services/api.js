@@ -36,7 +36,10 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
-  switchDemoRole: (targetRole) => api.post('/auth/switch-demo-role', { targetRole })
+  switchDemoRole: (targetRole) => api.post('/auth/switch-demo-role', { targetRole }),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
+  verifyResetToken: (params) => api.get('/auth/verify-reset-token', { params })
 };
 
 export const employeeAPI = {
