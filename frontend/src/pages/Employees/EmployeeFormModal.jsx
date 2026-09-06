@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Key, Copy, Check, Eye, EyeOff, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { employeeAPI, userAPI, scheduleAPI } from '../../services/api';
 import { Modal } from '../../components/common/CommonUI';
 import { useNotify } from '../../context/NotificationContext';
@@ -23,13 +24,15 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess }) {
     bank_account_no: '',
     bank_ifsc: '',
     pan_number: '',
-    create_user_account: true,
     user_role: 'Employee'
   });
 
   const [departments, setDepartments] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
+  const [showPassword, setShowPassword] = useState(true);
 
   useEffect(() => {
     // Load departments & schedules
@@ -53,11 +56,58 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess }) {
         bank_account_no: employee.bank_account_no || '',
         bank_ifsc: employee.bank_ifsc || '',
         pan_number: employee.pan_number || '',
-        create_user_account: false,
         user_role: employee.user_role || 'Employee'
       });
+    } else {
+      setFormData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        gender: 'Male',
+        date_of_birth: '',
+        joining_date: new Date().toISOString().split('T')[0],
+        department_id: '',
+        job_position_id: '',
+        employment_status: 'active',
+        working_schedule_id: '',
+        bank_name: '',
+        bank_account_no: '',
+        bank_ifsc: '',
+        pan_number: '',
+        user_role: 'Employee'
+      });
     }
-  }, [employee]);
+    setCreatedCredentials(null);
+    setCopiedField(null);
+    setShowPassword(true);
+  }, [employee, isOpen]);
+
+  const handleClose = () => {
+    setCreatedCredentials(null);
+    setCopiedField(null);
+    setShowPassword(true);
+    onClose();
+  };
+
+  const copyToClipboard = async (text, field) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2500);
+    } catch (err) {
+      showToast('Failed to copy to clipboard', 'error');
+    }
+  };
 
   const selectedDeptPositions = departments.find((d) => String(d.id) === String(formData.department_id))?.positions || [];
 
@@ -68,12 +118,23 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess }) {
       if (isEditing) {
         await employeeAPI.update(employee.id, formData);
         showToast('Employee updated successfully', 'success');
+        if (onSuccess) onSuccess();
+        handleClose();
       } else {
-        await employeeAPI.create(formData);
+        const res = await employeeAPI.create(formData);
         showToast('Employee created successfully', 'success');
+        if (res?.data?.login_credentials) {
+          setCreatedCredentials({
+            ...res.data.login_credentials,
+            employee_name: `${formData.first_name} ${formData.last_name}`.trim(),
+            employee_code: res.data.employee_code || ''
+          });
+          if (onSuccess) onSuccess();
+        } else {
+          if (onSuccess) onSuccess();
+          handleClose();
+        }
       }
-      onSuccess();
-      onClose();
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -84,11 +145,109 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess }) {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
-      title={isEditing ? `Edit Employee (${employee.emp_code})` : 'New Employee Registration'}
-      subtitle="Fill in employment master and banking disbursement parameters"
-      maxWidth="max-w-3xl"
+      onClose={handleClose}
+      title={
+        createdCredentials
+          ? 'Employee Account Credentials'
+          : isEditing
+          ? `Edit Employee (${employee?.emp_code || ''})`
+          : 'New Employee Registration'
+      }
+      subtitle={
+        createdCredentials
+          ? 'A user login account has been automatically provisioned for this employee.'
+          : 'Fill in employment master and banking disbursement parameters'
+      }
+      maxWidth={createdCredentials ? 'max-w-lg' : 'max-w-3xl'}
     >
+      {createdCredentials ? (
+        <div className="space-y-4 text-xs">
+          {/* Success Banner */}
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700 shrink-0">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-emerald-950 text-sm">Account Created Successfully</p>
+              <p className="text-emerald-700 text-xs">
+                {createdCredentials.employee_name} ({createdCredentials.employee_code}) &bull; Role: <strong>{createdCredentials.role || 'Employee'}</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* Credentials Display Box */}
+          <div className="space-y-3 p-4 rounded-xl bg-[#FAF7FF] border border-[#DDD9E8]">
+            {/* Email Field */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[#625E6E] uppercase tracking-wider">Login Email</label>
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-[#DDD9E8] shadow-2xs">
+                <span className="font-mono font-medium text-xs text-[#17151F] select-all">{createdCredentials.email}</span>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(createdCredentials.email, 'email')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#6C3FF5] hover:text-[#5B2FD1] bg-[#FAF7FF] hover:bg-[#F3E8FF] rounded-md transition-colors border border-[#DDD9E8] cursor-pointer"
+                  title="Copy email"
+                >
+                  {copiedField === 'email' ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                  <span>{copiedField === 'email' ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Temporary Password Field */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[#625E6E] uppercase tracking-wider">Temporary Password</label>
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-[#DDD9E8] shadow-2xs">
+                <span className="font-mono font-bold text-xs text-[#6C3FF5] tracking-wider select-all">
+                  {showPassword ? createdCredentials.temporary_password : '••••••••••••'}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-[#625E6E] hover:text-[#17151F] rounded hover:bg-[#FAF7FF] transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(createdCredentials.temporary_password, 'password')}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#6C3FF5] hover:text-[#5B2FD1] bg-[#FAF7FF] hover:bg-[#F3E8FF] rounded-md transition-colors border border-[#DDD9E8] cursor-pointer"
+                    title="Copy password"
+                  >
+                    {copiedField === 'password' ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                    <span>{copiedField === 'password' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Alert Notice */}
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2.5 text-amber-900">
+            <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-xs text-amber-950">First-Time Login Requirement</p>
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                Please share these credentials securely with the employee. The employee should change this temporary password after their first login.
+              </p>
+            </div>
+          </div>
+
+          {/* Footer Action */}
+          <div className="flex justify-end pt-3 border-t border-[#E7E5EF]">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="btn-primary text-xs flex items-center gap-1.5"
+            >
+              <CheckCircle2 size={15} />
+              <span>Done (I have copied these credentials)</span>
+            </button>
+          </div>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         {/* Basic Personal Details */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -273,40 +432,25 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess }) {
           </div>
         </div>
 
-        {/* User Account creation if new employee */}
+        {/* Automated Account Provisioning Notice */}
         {!isEditing && (
-          <div className="pt-2 border-t border-white/5 space-y-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.create_user_account}
-                onChange={(e) => setFormData({ ...formData, create_user_account: e.target.checked })}
-                className="rounded border-slate-700 text-sky-600 focus:ring-sky-500"
-              />
-              <span className="text-slate-200 font-medium">Create User Login Account (Default Pwd: Password@123)</span>
-            </label>
-
-            {formData.create_user_account && (
-              <div>
-                <label className="form-label">Assigned Role</label>
-                <select
-                  className="form-select"
-                  value={formData.user_role}
-                  onChange={(e) => setFormData({ ...formData, user_role: e.target.value })}
-                >
-                  <option value="Employee">Employee (Self-Service)</option>
-                  <option value="HR Manager">HR Manager</option>
-                  <option value="HR Payroll User">HR Payroll User</option>
-                  <option value="HR Payroll Admin">HR Payroll Admin</option>
-                  <option value="Admin">Admin</option>
-                </select>
+          <div className="pt-2 border-t border-[#E7E5EF] space-y-2">
+            <div className="p-3.5 rounded-xl bg-[#FAF7FF] border border-[#DDD9E8] flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-[#6C3FF5]/10 text-[#6C3FF5] shrink-0 mt-0.5">
+                <Key size={16} />
               </div>
-            )}
+              <div className="space-y-1">
+                <p className="font-bold text-xs text-[#17151F]">Automated Employee Login Account</p>
+                <p className="text-[11px] text-[#625E6E] leading-relaxed">
+                  A user login account with the <strong className="text-[#6C3FF5] font-semibold">Employee</strong> role will be automatically created using the work email above. A secure temporary password will be generated and revealed upon submission.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
-          <button type="button" onClick={onClose} className="btn-secondary">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[#E7E5EF]">
+          <button type="button" onClick={handleClose} className="btn-secondary">
             Cancel
           </button>
           <button type="submit" disabled={loading} className="btn-primary">
@@ -314,6 +458,7 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess }) {
           </button>
         </div>
       </form>
+      )}
     </Modal>
   );
 }

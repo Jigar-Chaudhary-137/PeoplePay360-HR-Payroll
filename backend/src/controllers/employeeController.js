@@ -1,5 +1,39 @@
-const { query } = require('../config/db');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const { query, withTransaction } = require('../config/db');
 const { logAudit } = require('../utils/auditLogger');
+
+/**
+ * Generate a secure 12-character temporary password
+ * Guaranteed to contain at least 1 uppercase, 1 lowercase, 1 digit, and 1 symbol.
+ * Avoids ambiguous characters (O, 0, I, l) to ensure readability.
+ */
+function generateTemporaryPassword() {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const numbers = '23456789';
+  const symbols = '!@#$%&*';
+  const all = upper + lower + numbers + symbols;
+
+  const chars = [
+    upper[crypto.randomInt(0, upper.length)],
+    lower[crypto.randomInt(0, lower.length)],
+    numbers[crypto.randomInt(0, numbers.length)],
+    symbols[crypto.randomInt(0, symbols.length)]
+  ];
+
+  for (let i = 0; i < 8; i++) {
+    chars.push(all[crypto.randomInt(0, all.length)]);
+  }
+
+  // Fisher-Yates shuffle
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  return chars.join('');
+}
 
 async function getEmployees(req, res, next) {
   try {
@@ -168,7 +202,9 @@ async function createEmployee(req, res, next) {
       bank_account_no,
       bank_ifsc,
       pan_no,
-      avatar_url
+      pan_number,
+      avatar_url,
+      user_role
     } = req.body;
 
     if (!first_name || !last_name || !email) {
@@ -178,38 +214,144 @@ async function createEmployee(req, res, next) {
       });
     }
 
-    const code = employee_code || `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid work email address.'
+      });
+    }
 
-    const result = await query(
-      `INSERT INTO employees (
-        employee_code, first_name, last_name, email, phone,
-        department_id, job_position_id, manager_id, working_schedule_id,
-        employment_status, work_location, company,
-        bank_name, bank_account_no, bank_ifsc, pan_no, avatar_url
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        code, first_name, last_name, email, phone || null,
-        department_id || null, job_position_id || null, manager_id || null, working_schedule_id || 1,
-        employment_status, work_location || 'Main Office', company || 'PeoplePay360 Inc',
-        bank_name || null, bank_account_no || null, bank_ifsc || null, pan_no || null, avatar_url || null
-      ]
-    );
+    // Check if email already exists in employees table
+    const existingEmp = await query('SELECT id FROM employees WHERE LOWER(email) = LOWER(?) LIMIT 1', [cleanEmail]);
+    if (existingEmp && existingEmp.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'An employee with this email address already exists.'
+      });
+    }
 
-    const newId = result.insertId;
-    await logAudit(req.user?.id, 'CREATE_EMPLOYEE', 'employee', newId, { code, email });
+    // Check if email already exists in users table
+    const existingUser = await query('SELECT id FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1', [cleanEmail]);
+    if (existingUser && existingUser.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'A user login account with this email address already exists.'
+      });
+    }
 
-    const [created] = await query('SELECT * FROM employees WHERE id = ?', [newId]);
+    const code = (employee_code && employee_code.trim()) ? employee_code.trim() : `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+
+    if (employee_code && employee_code.trim()) {
+      const existingCode = await query('SELECT id FROM employees WHERE employee_code = ? LIMIT 1', [code]);
+      if (existingCode && existingCode.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: `Employee code '${code}' is already in use.`
+        });
+      }
+    }
+
+    // Generate secure temporary password
+    const temporaryPassword = generateTemporaryPassword();
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(temporaryPassword, salt);
+
+    // Resolve Employee role by role name rather than relying only on hardcoded role ID 5
+    const targetRoleName = (user_role && user_role.trim()) ? user_role.trim() : 'Employee';
+    let roleId = 5;
+    let actualRoleName = 'Employee';
+    const roleRows = await query('SELECT id, name FROM roles WHERE LOWER(name) = LOWER(?) LIMIT 1', [targetRoleName]);
+    if (roleRows && roleRows.length > 0) {
+      roleId = roleRows[0].id;
+      actualRoleName = roleRows[0].name;
+    } else {
+      const defaultRoleRows = await query("SELECT id, name FROM roles WHERE LOWER(name) = 'employee' LIMIT 1");
+      if (defaultRoleRows && defaultRoleRows.length > 0) {
+        roleId = defaultRoleRows[0].id;
+        actualRoleName = defaultRoleRows[0].name;
+      }
+    }
+
+    const panValue = pan_no || pan_number || null;
+
+    // Atomically create employee and user account within a transaction
+    const transactionResult = await withTransaction(async (conn) => {
+      // Concurrency check within transaction to prevent race conditions
+      const [dupEmp] = await conn.query('SELECT id FROM employees WHERE LOWER(email) = LOWER(?) LIMIT 1', [cleanEmail]);
+      if (dupEmp && dupEmp.length > 0) {
+        const err = new Error('An employee with this email address already exists.');
+        err.statusCode = 409;
+        throw err;
+      }
+
+      const [dupUser] = await conn.query('SELECT id FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1', [cleanEmail]);
+      if (dupUser && dupUser.length > 0) {
+        const err = new Error('A user login account with this email address already exists.');
+        err.statusCode = 409;
+        throw err;
+      }
+
+      const [empResult] = await conn.query(
+        `INSERT INTO employees (
+          employee_code, first_name, last_name, email, phone,
+          department_id, job_position_id, manager_id, working_schedule_id,
+          employment_status, work_location, company,
+          bank_name, bank_account_no, bank_ifsc, pan_no, avatar_url
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          code, first_name.trim(), last_name.trim(), cleanEmail, phone || null,
+          department_id || null, job_position_id || null, manager_id || null, working_schedule_id || 1,
+          employment_status || 'Active', work_location || 'Main Office', company || 'PeoplePay360 Inc',
+          bank_name || null, bank_account_no || null, bank_ifsc || null, panValue, avatar_url || null
+        ]
+      );
+
+      const newEmployeeId = empResult.insertId;
+
+      const [userResult] = await conn.query(
+        `INSERT INTO users (
+          employee_id, email, password_hash, role_id, status
+        ) VALUES (?, ?, ?, ?, 'Active')`,
+        [newEmployeeId, cleanEmail, passwordHash, roleId]
+      );
+
+      const [createdRows] = await conn.query('SELECT * FROM employees WHERE id = ?', [newEmployeeId]);
+
+      return {
+        employee: createdRows[0],
+        userId: userResult.insertId
+      };
+    });
+
+    // Audit logging without logging any passwords
+    await logAudit(req.user?.id, 'CREATE_EMPLOYEE', 'employee', transactionResult.employee.id, {
+      code,
+      email: cleanEmail,
+      user_id: transactionResult.userId,
+      role: actualRoleName
+    });
 
     return res.status(201).json({
       success: true,
-      message: 'Employee created successfully.',
-      data: created
+      message: 'Employee and user login account created successfully.',
+      data: {
+        ...transactionResult.employee,
+        login_credentials: {
+          email: cleanEmail,
+          temporary_password: temporaryPassword,
+          role: actualRoleName,
+          must_change_password: true,
+          instructions: 'Please provide these credentials to the employee. The employee should change this temporary password upon first login.'
+        }
+      }
     });
   } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({
+    if (error.statusCode === 409 || error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({
         success: false,
-        message: 'An employee with this email or employee code already exists.'
+        message: error.message && error.statusCode === 409 ? error.message : 'An employee or user login account with this email or code already exists.'
       });
     }
     next(error);
