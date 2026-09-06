@@ -1,7 +1,8 @@
-# PEOPLEPAY360 — Backend REST API Specification
+# PeoplePay360 – Backend REST API Specification
+
 **Version:** 1.0.0  
 **Base URL:** `http://localhost:5000/api`  
-**Audience:** Team Members 2 & 3 (Frontend & Workflow Integrations)
+**Comprehensive Reference:** See [API_REFERENCE.md](../API_REFERENCE.md) in the project root for detailed request/response schemas.
 
 ---
 
@@ -14,10 +15,10 @@
 | Role | Access Scope |
 | :--- | :--- |
 | **Admin** | Full access to all modules, user administration, system config |
-| **HR Manager** | Employees, Contracts, Schedules, Attendance, Time-Off Approvals |
+| **HR Manager** | Employees, Contracts, Schedules, Work Locations, Attendance, Time-Off Approvals |
 | **HR Payroll Admin** | Payruns, Payslips, Salary Structures, Salary Rules, Mark Paid |
-| **HR Payroll User** | Payrun Processing, Payslips, Views |
-| **Employee** | Self-Service Portal (Own profile, attendance, time-off requests, payslips) |
+| **HR Payroll User** | Payrun Processing, Payslips, Views, Email Dispatch |
+| **Employee** | Self-Service Portal (Own profile, GPS attendance check-in, time-off requests, payslips) |
 
 ### Predictable Response Envelope
 #### Success Response (`200 OK` / `201 Created`)
@@ -42,165 +43,111 @@
 ## 2. Seed Demo Credentials
 | Email | Password | Role | Features / Demo Focus |
 | :--- | :--- | :--- | :--- |
-| `admin@peoplepay360.com` | `Password@123` | **Admin** | Superuser, all actions |
-| `priya.patel@peoplepay360.com` | `Password@123` | **HR Manager** | Leave approvals, Employee creation |
-| `amit.singh@peoplepay360.com` | `Password@123` | **HR Payroll Admin** | Payrun wizard, validation, mark paid |
-| `neha.gupta@peoplepay360.com` | `Password@123` | **HR Payroll User** | Payruns / Has missing bank info warning |
-| `rahul.sharma@peoplepay360.com` | `Password@123` | **Employee** | **PRIMARY DEMO:** 2 Historical contracts (Jan-Jun ₹35k, Jul-Dec ₹45k) |
-| `vikas.mehta@peoplepay360.com` | `Password@123` | **Employee** | Operations / Has missing checkout anomaly |
+| `admin@peoplepay360.com` | `Password@123` | **Admin** | Superuser, all actions, user administration |
+| `priya.patel@peoplepay360.com` | `Password@123` | **HR Manager** | Leave approvals, employee creation, schedule management |
+| `amit.singh@peoplepay360.com` | `Password@123` | **HR Payroll Admin** | Payrun wizard, validation, mark paid, salary rules |
+| `neha.gupta@peoplepay360.com` | `Password@123` | **HR Payroll User** | Payrun processing, email dispatch *(has missing bank info warning)* |
+| `rahul.sharma@peoplepay360.com` | `Password@123` | **Employee** | **PRIMARY DEMO:** 2 Historical contracts (Jan-Jun ₹35k, Jul-Dec ₹45k), GPS check-in |
+| `vikas.mehta@peoplepay360.com` | `Password@123` | **Employee** | Operations staff *(has missing checkout anomaly on Aug 7)* |
 
 ---
 
 ## 3. Endpoints Directory
 
-### 3.1 Authentication
-- **`POST /auth/login`**
-  - **Body:** `{ "email": "admin@peoplepay360.com", "password": "Password@123" }`
-  - **Returns:** `{ success: true, data: { token: "...", user: { id, email, role, employee_id, name } } }`
-- **`GET /auth/me`**
-  - **Auth:** Required
-  - **Returns:** Current authenticated user profile with role and employee link.
+### 3.1 Authentication (`/api/auth`)
+- `POST /api/auth/login` — Authenticates user, returns JWT and user profile.
+- `GET /api/auth/me` — Returns current authenticated user.
+- `POST /api/auth/switch-role` — Instant role switching for evaluation demos.
+- `POST /api/auth/forgot-password` — Generates cryptographically secure reset token.
+- `POST /api/auth/reset-password` — Updates password using reset token.
 
----
+### 3.2 Employees (`/api/employees`)
+- `GET /api/employees` — Search and filter employee directory (`search`, `department_id`, `status`).
+- `GET /api/employees/:id` — Full employee profile.
+- `POST /api/employees` — Create new employee record.
+- `PUT /api/employees/:id` — Update employee details.
+- `DELETE /api/employees/:id` — Remove employee (restricted if active payroll records exist).
+- `GET /api/employees/:id/contracts` — Contract history ledger.
+- `GET /api/employees/:id/attendance` — Attendance records for employee.
+- `GET /api/employees/:id/payslips` — Past payslips for employee.
 
-### 3.2 Employees
-- **`GET /employees`**
-  - **Auth:** HR Manager, HR Payroll Admin, HR Payroll User, Admin
-  - **Query Params:** `search`, `department_id`, `status` ('Active', 'Inactive')
-  - **Returns:** Array of employees with department, position, manager, and schedule details.
-- **`GET /employees/:id`**
-  - **Auth:** Self or HR/Payroll/Admin
-  - **Returns:** Detailed employee object including related `contracts`, `attendance`, `time_off_requests`, and `time_off_allocations`.
-- **`POST /employees`**
-  - **Auth:** HR Manager, Admin
-  - **Body:** `{ first_name, last_name, email, phone, department_id, job_position_id, manager_id, working_schedule_id, bank_name, bank_account_no, bank_ifsc, pan_no }`
-- **`PUT /employees/:id`**
-  - **Auth:** HR Manager, Admin
-- **`DELETE /employees/:id`**
-  - **Auth:** HR Manager, Admin
+### 3.3 Contracts & Historical Selection (`/api/contracts`)
+- `GET /api/contracts` — List contracts across organization.
+- `GET /api/contracts/applicable` — Resolves the active contract for an employee during a given pay period.
+- `POST /api/contracts` — Create a contract with date range overlap validation.
+- `PUT /api/contracts/:id` — Update contract terms.
+- `DELETE /api/contracts/:id` — Remove contract.
 
----
+### 3.4 Working Schedules (`/api/schedules`)
+- `GET /api/schedules` — List schedules with working hours and days.
+- `POST /api/schedules` — Create a schedule with daily shift hours and break configurations.
+- `PUT /api/schedules/:id` — Update schedule.
 
-### 3.3 Contracts & Historical Selection
-- **`GET /contracts`**
-  - **Query Params:** `employee_id`, `status`
-- **`GET /contracts/applicable`**
-  - **Query Params:** `employee_id`, `period_start`, `period_end`
-  - **Business Rule:** Returns the exact contract active during the given period.
-    *Example: For Rahul Sharma (`employee_id=2`), `period_start=2026-08-01` returns Contract B (`wage=45000.00`).*
-- **`POST /contracts`**
-  - **Body:** `{ contract_code, employee_id, start_date, end_date, wage, salary_structure_id, working_schedule_id }`
-- **`PUT /contracts/:id`**
+### 3.5 Work Locations & Geofences (`/api/work-locations`)
+- `GET /api/work-locations` — List office geofences (latitude, longitude, allowed radius).
+- `POST /api/work-locations` — Create new work location.
+- `PUT /api/work-locations/:id` — Update location coordinates or radius.
 
----
+### 3.6 Attendance & GPS Verification (`/api/attendance`)
+- `GET /api/attendance` — Query attendance logs (`employee_id`, `month`, `year`, `status`).
+- `POST /api/attendance/check-in` — Clock in with browser coordinates; verified against office radius using Haversine formula.
+- `POST /api/attendance/check-out` — Clock out; computes net worked hours deducting break.
+- `POST /api/attendance/manual` — HR manual punch correction with authorized reason.
+- `PUT /api/attendance/:id` — Update record.
 
-### 3.4 Working Schedules
-- **`GET /schedules`**
-  - Returns schedules with dynamic hours per week and day configs.
-- **`POST /schedules`**
-  - **Body:** `{ name, days: [{ day_of_week: "Monday", start_time: "09:00:00", end_time: "18:00:00", break_hours: 1 }] }`
+### 3.7 Time Off & Leaves (`/api/time-off`)
+- `GET /api/time-off/types` — List leave categories (Paid Time Off, Sick Leave, etc.).
+- `GET /api/time-off/allocations` — Employee annual leave balances.
+- `GET /api/time-off/requests` — Query leave requests.
+- `POST /api/time-off/requests` — Submit a leave request.
+- `PUT /api/time-off/requests/:id/approve` — Approve request and deduct balance.
+- `PUT /api/time-off/requests/:id/reject` — Reject request with reason.
 
----
+### 3.8 Salary Structures & Rules (`/api/salary-config`)
+- `GET /api/salary-config/structures` — List salary structures and associated rules.
+- `POST /api/salary-config/structures` — Create new salary structure.
+- `GET /api/salary-config/rules` — List salary rules sorted by sequence (`sequence ASC`).
+- `POST /api/salary-config/rules` — Create rule (`fixed`, `percent_wage`, `percent_basic`, `formula`).
+- `PUT /api/salary-config/rules/:id` — Update rule.
+- `DELETE /api/salary-config/rules/:id` — Remove rule.
 
-### 3.5 Attendance
-- **`GET /attendance`**
-  - **Query Params:** `employee_id`, `start_date`, `end_date`, `status`
-- **`GET /attendance/today`**
-  - Returns today's check-in/out status for the logged-in employee.
-- **`POST /attendance/check-in`**
-  - Logs check-in timestamp.
-- **`POST /attendance/check-out`**
-  - Computes worked hours = `(check_out - check_in) - break_hours`.
-- **`PUT /attendance/:id`**
-  - **Auth:** HR Manager, Admin (Manual authorized correction).
+### 3.9 Payruns (State Machine: draft → computed → validated → paid) (`/api/payruns`)
+- `GET /api/payruns` — List payruns with totals.
+- `GET /api/payruns/:id` — Get payrun header and computed payslip summary.
+- `POST /api/payruns` — Create a draft payrun with eligible employees.
+- `POST /api/payruns/:id/compute` — Execute sequential salary calculation engine for all employees.
+- `GET /api/payruns/:id/anomalies` — Run compliance and variance pre-flight scans.
+- `POST /api/payruns/:id/validate` — Lock payrun in `validated` state.
+- `POST /api/payruns/:id/pay` — Mark payrun as `paid`.
+- `DELETE /api/payruns/:id` — Delete draft payrun.
 
----
+### 3.10 Payslips, PDF & Email (`/api/payslips`)
+- `GET /api/payslips` — Query payslips.
+- `GET /api/payslips/:id` — Full itemized payslip with earnings and deductions lines.
+- `GET /api/payslips/:id/pdf` — Stream generated vector PDF payslip (`application/pdf`).
+- `POST /api/payslips/:id/send-email` — Dispatch PDF payslip via Nodemailer to employee email.
 
-### 3.6 Time Off
-- **`GET /time-off/types`** & **`POST /time-off/types`**
-- **`GET /time-off/allocations`** & **`POST /time-off/allocations`**
-- **`GET /time-off/requests`**
-- **`POST /time-off/requests`**
-  - **Body:** `{ employee_id, time_off_type_id, start_date, end_date, days_requested, reason }`
-  - *Note:* Leave balance is NOT reduced when status is `Pending`.
-- **`PATCH /time-off/requests/:id/approve`**
-  - **Auth:** HR Manager, Admin
-  - *Transaction:* Validates balance, reduces allocation, marks status `Approved`.
-- **`PATCH /time-off/requests/:id/reject`**
-  - **Body:** `{ rejection_reason: "..." }`
+### 3.11 Dashboard & Analytics (`/api/dashboard`)
+- `GET /api/dashboard/stats` — Executive KPI metric cards.
+- `GET /api/dashboard/department-costs` — Aggregate payroll expenditure by department.
+- `GET /api/dashboard/trends` — 6-month monthly payroll expenditure trends.
 
----
+### 3.12 User Administration (`/api/users`)
+- `GET /api/users` — List user logins and system roles (Admin only).
+- `POST /api/users` — Create user login account (Admin only).
+- `GET /api/users/roles` — Available system roles.
 
-### 3.7 Salary Structures & Rules
-- **`GET /salary-config/structures`** & **`POST /salary-config/structures`**
-- **`GET /salary-config/rules`** & **`POST /salary-config/rules`**
-  - **Rule Categories:** `Basic`, `Allowance`, `Gross`, `Deduction`, `Net`
-  - **Calculation Types:** `fixed`, `percent_wage`, `percent_basic`, `formula`
-  - **Sequential evaluation:** Each rule can reference previous rules in sequence!
+### 3.13 Ask PeoplePay AI (`/api/ai`)
+- `POST /api/ai/ask` — Context-aware query answering using live MySQL records (Google Gemini + offline fallback).
 
----
+### 3.14 Notifications (`/api/notifications`)
+- `GET /api/notifications` — Fetch in-app user notifications.
+- `PUT /api/notifications/:id/read` — Mark notification read.
+- `PUT /api/notifications/read-all` — Mark all read.
 
-### 3.8 Payruns (2-Step Creation & State Machine)
-- **`GET /payruns`** & **`GET /payruns/:id`**
-- **`GET /payruns/eligible-employees`**
-  - **Query Params:** `salary_structure_id`, `period_start`, `period_end`
-  - *Step 2 Wizard Support:* Scans database and returns employees eligible with matching active contracts.
-- **`POST /payruns`**
-  - **Body:**
-    ```json
-    {
-      "name": "Regular Payrun - August 2026",
-      "salary_structure_id": 1,
-      "period_start": "2026-08-01",
-      "period_end": "2026-08-31",
-      "pay_date": "2026-08-31",
-      "employee_selections": [
-        { "employee_id": 2, "contract_id": 2 },
-        { "employee_id": 5, "contract_id": 6 }
-      ]
-    }
-    ```
-- **`POST /payruns/:id/compute`**
-  - **State Transition:** `draft` → `computed`
-  - Runs the backend salary engine in a database transaction.
-  - Automatically runs Anomaly Detection.
-- **`POST /payruns/:id/validate`**
-  - **State Transition:** `computed` → `validated`
-  - Finalizes and locks payslips.
-- **`POST /payruns/:id/mark-paid`**
-  - **State Transition:** `validated` → `paid`
-  - Records payment timestamp.
-- **`GET /payruns/:id/anomalies`**
-  - Returns rule-based anomaly reports (Salary drops/spikes > 15%, missing checkouts, missing bank info, duplicate slips).
+### 3.15 Audit Logs (`/api/audit-logs`)
+- `GET /api/audit-logs` — Immutable audit trail of system events.
 
----
-
-### 3.9 Payslips, PDF & Email
-- **`GET /payslips`**
-- **`GET /payslips/:id`**
-  - Returns complete itemized payslip with earnings breakdown, deduction breakdown, gross, and net take-home pay.
-- **`GET /payslips/:id/pdf`**
-  - Streams high-resolution generated PDF file (`application/pdf`).
-- **`POST /payslips/:id/send-email`**
-  - Sends payslip with PDF attachment via Nodemailer.
-- **`POST /payslips/send-bulk`**
-  - **Body:** `{ "payrun_id": 1 }`
-  - Sends payslips to all employees in the payrun.
-
----
-
-### 3.10 Dashboard
-- **`GET /dashboard`**
-  - **Query Params:** `department_id`, `start_date`, `end_date`
-  - Returns real database aggregations:
-    - `kpis`: `totalNetPaid`, `totalGrossPaid`, `totalDeductionsPaid`, `payslipsGenerated`, `averageSalary`, `totalEmployees`, `approvedTimeOffDays`, `attendanceHealthPercent`
-    - `departmentSalaries`: Array of total costs grouped by department
-    - `monthlyTrends`: Historical net salaries across payruns
-    - `alerts`: Real-time warning banners
-
----
-
-### 3.11 AI Assistant
-- **`POST /ai/ask`**
-  - **Body:** `{ "question": "Why did Rahul's salary decrease this month?" }`
-  - Contextually queries database metrics and returns structured factual explanation.
+### 3.16 Departments & Positions (`/api/departments`)
+- `GET /api/departments` — List departments with manager names.
+- `GET /api/departments/positions` — List job positions by department.
